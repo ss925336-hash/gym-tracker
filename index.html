@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="重訓日誌">
+<meta name="theme-color" content="#1D9E75">
+<title>重訓日誌</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.6.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --green:#1D9E75;--green-l:rgba(29,158,117,0.12);--green-m:#5DCAA5;--green-d:#0F6E56;
+  --blue:#378ADD;--blue-l:rgba(55,138,221,0.12);
+  --amber:#BA7517;--amber-l:rgba(186,117,23,0.12);
+  --coral:#D85A30;--coral-l:rgba(216,90,48,0.12);
+  --purple:#534AB7;--purple-l:rgba(83,74,183,0.12);
+  --bg:#F4F6F8;--surf:#FFFFFF;--surf2:#EEF0F3;--surf3:#E4E6EA;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);
+  --tx:#17191C;--tx2:#5A6070;--tx3:#9BA3B0;
+  --r:14px;--r-s:9px;--nav-h:68px;
+  --safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0D0E10;--surf:#1A1B1E;--surf2:#242628;--surf3:#2E3035;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --tx:#F0F1F3;--tx2:#9BA3B0;--tx3:#555C68;
+  --green-l:rgba(29,158,117,0.18);--blue-l:rgba(55,138,221,0.18);
+  --amber-l:rgba(186,117,23,0.18);--coral-l:rgba(216,90,48,0.18);
+}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+body{display:flex;flex-direction:column;}
+button,input,textarea{font-family:'DM Sans',sans-serif;}
+
+.hdr{padding:12px 18px 10px;padding-top:calc(var(--safe-t) + 12px);background:var(--surf);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hdr-l h1{font-size:19px;font-weight:600;color:var(--tx);}
+.hdr-l p{font-size:12px;color:var(--tx2);margin-top:1px;}
+.timer-pill{display:flex;align-items:center;gap:4px;background:var(--green-l);color:var(--green-d);font-size:12px;font-weight:600;font-family:'DM Mono',monospace;padding:5px 10px;border-radius:99px;}
+.timer-pill i{font-size:13px;}
+
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(var(--nav-h) + var(--safe-b) + 14px);}
+
+.bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--surf);border-top:0.5px solid var(--border);display:flex;z-index:50;}
+.nitem{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--tx3);font-size:11px;font-weight:500;transition:color .15s;padding-bottom:2px;}
+.nitem i{font-size:22px;transition:transform .15s;}
+.nitem.active{color:var(--green);}
+.nitem.active i{transform:scale(1.08);}
+
+.page{display:none;}.page.active{display:block;}
+.slbl{font-size:11px;font-weight:600;color:var(--tx3);letter-spacing:.07em;text-transform:uppercase;margin:18px 0 9px 2px;}
+.slbl:first-child{margin-top:2px;}
+
+/* PHASE BANNER */
+.phase-banner{border-radius:var(--r);padding:13px 16px;margin-bottom:9px;display:flex;align-items:center;gap:12px;}
+.phase-banner.m1{background:var(--green-l);border:0.5px solid var(--green-m);}
+.phase-banner.m2{background:var(--blue-l);border:0.5px solid rgba(55,138,221,0.3);}
+.phase-banner.m3{background:var(--purple-l);border:0.5px solid rgba(83,74,183,0.3);}
+.phase-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:700;}
+.phase-dot.m1{background:var(--green);color:white;}
+.phase-dot.m2{background:var(--blue);color:white;}
+.phase-dot.m3{background:var(--purple);color:white;}
+.phase-info{flex:1;}
+.phase-name{font-size:13px;font-weight:600;color:var(--tx);}
+.phase-sub{font-size:11px;color:var(--tx2);margin-top:2px;}
+.btn-phase-edit{background:transparent;border:none;cursor:pointer;color:var(--tx3);padding:4px;font-size:16px;display:flex;}
+
+/* NEW PHASE ALERT */
+.phase-alert{background:var(--amber-l);border:0.5px solid var(--amber);border-radius:var(--r);padding:12px 14px;margin-bottom:9px;display:none;}
+.phase-alert-title{font-size:13px;font-weight:600;color:var(--amber);margin-bottom:4px;display:flex;align-items:center;gap:5px;}
+.phase-alert-body{font-size:12px;color:var(--tx2);line-height:1.5;}
+.phase-alert-btns{display:flex;gap:7px;margin-top:10px;}
+.btn-phase-apply{flex:1;padding:9px;background:var(--amber);border:none;border-radius:var(--r-s);font-size:13px;font-weight:600;color:white;cursor:pointer;}
+.btn-phase-dismiss{flex:1;padding:9px;background:var(--surf2);border:none;border-radius:var(--r-s);font-size:13px;color:var(--tx2);cursor:pointer;}
+
+/* EXERCISE CARD */
+.ex-card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:9px;}
+.ex-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px;}
+.ex-name{font-size:15px;font-weight:600;color:var(--tx);}
+.ex-muscle{font-size:12px;color:var(--tx2);margin-top:2px;}
+.ex-meta{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap;}
+.ai-chip{display:inline-flex;align-items:center;gap:3px;background:var(--green-l);color:var(--green-d);font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;}
+.ai-chip i{font-size:11px;}
+.note-chip{display:inline-flex;align-items:center;gap:3px;background:var(--surf2);color:var(--tx2);font-size:11px;padding:3px 8px;border-radius:99px;}
+.btn-ico{background:transparent;border:none;cursor:pointer;color:var(--tx3);padding:5px;border-radius:8px;display:flex;align-items:center;font-size:18px;line-height:1;}
+.btn-ico:active{background:var(--surf2);}
+
+/* SETS TABLE */
+.stbl{width:100%;border-collapse:collapse;font-size:14px;}
+.stbl th{color:var(--tx3);font-weight:500;text-align:left;padding:2px 5px 7px 0;font-size:11px;letter-spacing:.03em;}
+.stbl td{padding:4px 5px 4px 0;vertical-align:middle;}
+.ninp{width:66px;padding:8px 0;border:0.5px solid var(--border2);border-radius:var(--r-s);font-size:15px;font-weight:500;color:var(--tx);background:var(--surf2);font-family:'DM Mono',monospace;-moz-appearance:textfield;text-align:center;-webkit-appearance:none;}
+.ninp::-webkit-outer-spin-button,.ninp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.ninp:focus{outline:none;border-color:var(--green);background:var(--green-l);}
+.snum{color:var(--tx3);font-size:12px;font-weight:600;width:18px;}
+
+/* CHECKBOX for set done */
+.set-check{width:28px;height:28px;border:1.5px solid var(--border2);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--surf2);flex-shrink:0;transition:all .15s;}
+.set-check.done{background:var(--green);border-color:var(--green);}
+.set-check.done i{color:white;}
+.set-check i{color:var(--tx3);font-size:15px;}
+.set-check:active{transform:scale(.9);}
+
+/* PLANK */
+.plank-timer-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:var(--surf2);border-radius:var(--r-s);}
+.plank-display{font-size:22px;font-weight:600;font-family:'DM Mono',monospace;color:var(--tx);flex:1;}
+.plank-display.running{color:var(--green);}
+.btn-plank{padding:7px 14px;border:none;border-radius:var(--r-s);font-size:13px;font-weight:600;cursor:pointer;}
+.btn-ps{background:var(--green);color:white;}
+.btn-pp{background:var(--coral-l);color:var(--coral);}
+.btn-pr{background:var(--surf3);color:var(--tx2);}
+
+.btn-addset{display:flex;align-items:center;justify-content:center;gap:5px;color:var(--green);background:transparent;border:1px dashed var(--green-m);border-radius:var(--r-s);padding:8px;font-size:13px;font-weight:500;cursor:pointer;width:100%;margin-top:9px;}
+.btn-addset:active{background:var(--green-l);}
+.btn-addex{display:flex;align-items:center;justify-content:center;gap:7px;color:var(--tx2);background:var(--surf);border:0.5px solid var(--border2);border-radius:var(--r);padding:13px;font-size:14px;font-weight:500;cursor:pointer;width:100%;margin-top:4px;}
+.btn-addex:active{background:var(--green-l);color:var(--green);}
+.btn-done{background:var(--green);color:white;border:none;border-radius:var(--r);padding:15px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin-top:11px;}
+.btn-done:active{opacity:.85;}
+
+/* HISTORY / CALENDAR */
+.cal-card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:9px;}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-month{font-size:15px;font-weight:600;color:var(--tx);}
+.cal-nav{display:flex;gap:4px;}
+.cal-nav button{background:transparent;border:0.5px solid var(--border2);border-radius:7px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);font-size:16px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dow{font-size:11px;color:var(--tx3);text-align:center;padding-bottom:4px;font-weight:500;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:13px;cursor:pointer;position:relative;color:var(--tx2);}
+.cal-day.has-workout{background:var(--green-l);color:var(--green-d);font-weight:600;}
+.cal-day.today{border:1.5px solid var(--green);color:var(--green);font-weight:600;}
+.cal-day.other-month{color:var(--tx3);opacity:.4;}
+.cal-day:active{background:var(--surf2);}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:var(--green);position:absolute;bottom:2px;left:50%;transform:translateX(-50%);}
+
+.workout-detail{background:var(--surf2);border-radius:var(--r-s);padding:10px 12px;margin-top:4px;font-size:12px;color:var(--tx2);}
+.workout-detail strong{color:var(--tx);}
+
+.h-card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;}
+.h-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.h-name{font-size:15px;font-weight:600;color:var(--tx);}
+.h-date{font-size:12px;color:var(--tx2);margin-top:2px;}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;}
+.tag-g{background:var(--green-l);color:var(--green-d);}
+.stats-row{display:flex;gap:11px;margin-top:11px;padding-top:11px;border-top:0.5px solid var(--border);flex-wrap:wrap;}
+.stat{font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:3px;}
+.stat strong{color:var(--tx);font-weight:600;}
+.stat i{font-size:13px;}
+.pbwrap{margin-top:9px;}
+.pblbl{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);margin-bottom:4px;}
+.pbbar{height:5px;background:var(--surf2);border-radius:99px;overflow:hidden;}
+.pbfill{height:100%;border-radius:99px;background:var(--green);}
+
+/* Countdown */
+.countdown-banner{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:9px;display:flex;align-items:center;gap:14px;}
+.cd-icon{width:44px;height:44px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cd-icon i{font-size:22px;color:var(--blue);}
+.cd-days{font-size:26px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);}
+
+/* AI box */
+.ai-box{background:var(--green-l);border:0.5px solid var(--green-m);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;}
+.ai-box-ttl{font-size:13px;color:var(--green-d);font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:5px;}
+.ai-row{display:flex;justify-content:space-between;align-items:center;background:var(--surf);border-radius:var(--r-s);padding:9px 12px;margin-bottom:6px;}
+.ai-row:last-child{margin-bottom:0;}
+.ai-rname{font-size:13px;font-weight:500;color:var(--tx);}
+.ai-rval{font-size:12px;font-weight:600;}
+.up{color:var(--green);}
+.hold{color:var(--amber);}
+.cardio{color:var(--blue);}
+
+/* BF card */
+.bf-card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:9px;}
+.bf-nums{display:flex;justify-content:space-between;margin-bottom:8px;}
+.bf-num{text-align:center;}
+.bf-val{font-size:18px;font-weight:600;font-family:'DM Mono',monospace;}
+.bf-lbl{font-size:11px;color:var(--tx3);margin-top:2px;}
+.bf-bar-wrap{position:relative;height:10px;background:var(--surf2);border-radius:99px;overflow:hidden;margin-bottom:6px;}
+.bf-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),var(--amber));}
+.bf-hint{font-size:11px;color:var(--tx3);text-align:center;}
+
+/* DIET */
+.mcgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:4px;}
+.mc{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r-s);padding:10px 6px;text-align:center;}
+.mc-val{font-size:17px;font-weight:600;font-family:'DM Mono',monospace;color:var(--tx);}
+.mc-lbl{font-size:10px;color:var(--tx3);margin-top:2px;font-weight:500;}
+.mc-sub{font-size:10px;color:var(--tx3);}
+.prot-c{color:var(--blue);}
+.carb-c{color:var(--amber);}
+.fat-c{color:var(--coral);}
+
+/* Water */
+.water-card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:13px 15px;margin-bottom:4px;}
+.water-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.water-title{font-size:13px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:5px;}
+.water-title i{color:var(--blue);font-size:15px;}
+.water-ml{font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);}
+.water-bar-wrap{height:6px;background:var(--surf2);border-radius:99px;overflow:hidden;margin-bottom:10px;}
+.water-bar-fill{height:100%;border-radius:99px;background:var(--blue);transition:width .4s ease;}
+.water-btns{display:flex;gap:7px;}
+.water-btn{flex:1;padding:8px 4px;background:var(--blue-l);border:0.5px solid rgba(55,138,221,0.25);border-radius:var(--r-s);font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;text-align:center;}
+.water-btn:active{opacity:.7;}
+.water-latte{background:var(--amber-l);border-color:rgba(186,117,23,0.25);color:var(--amber);}
+.water-undo{display:none;align-items:center;justify-content:space-between;margin-top:8px;background:var(--surf2);border-radius:var(--r-s);padding:8px 12px;font-size:12px;color:var(--tx2);}
+.water-undo.show{display:flex;}
+.btn-undo{background:transparent;border:0.5px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--coral);cursor:pointer;}
+
+/* Food */
+.meal-grp{margin-bottom:3px;}
+.meal-ttl{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.meal-ttl i{font-size:16px;color:var(--green);}
+.quick-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.quick-chip{padding:6px 11px;background:var(--surf2);border:0.5px solid var(--border2);border-radius:99px;font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;white-space:nowrap;}
+.quick-chip:active{background:var(--green-l);color:var(--green-d);}
+.food-row{display:flex;align-items:center;justify-content:space-between;background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r-s);padding:10px 12px;margin-bottom:5px;gap:8px;}
+.food-info{flex:1;min-width:0;}
+.food-name{font-size:13px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.food-detail{font-size:11px;color:var(--tx2);margin-top:2px;}
+.food-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.food-kcal{font-size:13px;font-weight:600;color:var(--tx);font-family:'DM Mono',monospace;}
+.btn-ef{background:transparent;border:none;cursor:pointer;color:var(--tx3);padding:3px;font-size:16px;display:flex;}
+.btn-addfood{display:flex;align-items:center;justify-content:center;gap:5px;color:var(--blue);background:transparent;border:1px dashed rgba(55,138,221,0.4);border-radius:var(--r-s);padding:10px;font-size:13px;font-weight:500;cursor:pointer;width:100%;margin-top:3px;margin-bottom:3px;}
+.btn-addfood:active{background:var(--blue-l);}
+/* Photo upload */
+.btn-photo{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--purple);background:var(--purple-l);border:0.5px solid rgba(83,74,183,0.3);border-radius:var(--r-s);padding:11px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-bottom:10px;}
+.btn-photo:active{opacity:.8;}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surf);border-radius:22px 22px 0 0;padding:18px 18px calc(18px + var(--safe-b));width:100%;max-height:88vh;overflow-y:auto;animation:slideUp .22s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.m-handle{width:36px;height:4px;background:var(--border2);border-radius:99px;margin:0 auto 14px;}
+.modal h3{font-size:17px;font-weight:600;margin-bottom:14px;color:var(--tx);}
+.flbl{font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:5px;display:block;}
+.finp{width:100%;padding:12px 13px;border:0.5px solid var(--border2);border-radius:var(--r-s);font-size:16px;color:var(--tx);background:var(--surf2);margin-bottom:11px;}
+.finp:focus{outline:none;border-color:var(--green);}
+.ftarea{width:100%;padding:12px 13px;border:0.5px solid var(--border2);border-radius:var(--r-s);font-size:14px;color:var(--tx);background:var(--surf2);margin-bottom:11px;min-height:100px;resize:none;line-height:1.5;}
+.ftarea:focus{outline:none;border-color:var(--green);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.chip{padding:7px 13px;border:0.5px solid var(--border2);border-radius:99px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx2);background:transparent;}
+.chip.sel{background:var(--green-l);color:var(--green-d);border-color:var(--green-m);}
+.mbtns{display:flex;gap:9px;}
+.btn-cancel{flex:1;padding:13px;background:var(--surf2);border:none;border-radius:var(--r-s);font-size:15px;font-weight:500;color:var(--tx2);cursor:pointer;}
+.btn-ok{flex:2;padding:13px;background:var(--green);border:none;border-radius:var(--r-s);font-size:15px;font-weight:600;color:white;cursor:pointer;}
+.btn-ok-blue{background:var(--blue);}
+.btn-ok-purple{background:var(--purple);}
+
+/* AI loading / result */
+.ai-loading{display:flex;align-items:center;gap:7px;padding:10px 13px;background:var(--green-l);border-radius:var(--r-s);margin-bottom:11px;font-size:13px;color:var(--green-d);font-weight:500;}
+.spinner{width:16px;height:16px;border:2px solid var(--green-m);border-top-color:var(--green-d);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.nutr-result{background:var(--surf2);border-radius:var(--r-s);padding:11px 13px;margin-bottom:11px;}
+.nr-title{font-size:13px;font-weight:600;margin-bottom:6px;color:var(--tx);}
+.nutr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px;}
+.ng-item{text-align:center;background:var(--surf);border-radius:7px;padding:7px 4px;}
+.ng-val{font-size:14px;font-weight:600;font-family:'DM Mono',monospace;}
+.ng-lbl{font-size:10px;color:var(--tx3);margin-top:1px;}
+
+/* photo preview */
+.photo-preview{width:100%;border-radius:var(--r-s);margin-bottom:11px;max-height:200px;object-fit:cover;display:none;}
+
+/* plan preview */
+.plan-preview{background:var(--surf2);border-radius:var(--r-s);padding:11px 13px;margin-bottom:11px;font-size:13px;color:var(--tx);line-height:1.6;max-height:200px;overflow-y:auto;display:none;}
+
+.toast{position:fixed;top:calc(var(--safe-t) + 66px);left:50%;transform:translateX(-50%) translateY(-8px);background:var(--tx);color:var(--bg);font-size:13px;font-weight:500;padding:9px 17px;border-radius:99px;z-index:300;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <h1 id="pg-title">今日訓練</h1>
+    <p id="pg-date"></p>
+  </div>
+  <div class="timer-pill" id="timer-pill"><i class="ti ti-flame"></i><span id="timer">00:00</span></div>
+</div>
+
+<div class="scroll" id="scroll">
+
+  <!-- WORKOUT PAGE -->
+  <div class="page active" id="page-workout">
+
+    <!-- Phase banner -->
+    <div class="slbl">目前訓練階段</div>
+    <div class="phase-banner m1" id="phase-banner">
+      <div class="phase-dot m1" id="phase-dot">1</div>
+      <div class="phase-info">
+        <div class="phase-name" id="phase-name">第一個月：基礎建立期</div>
+        <div class="phase-sub" id="phase-sub">開始日期：<span id="phase-start-display">未設定</span> · <span id="phase-days-left"></span></div>
+      </div>
+      <button class="btn-phase-edit btn-ico" onclick="openPhaseModal()"><i class="ti ti-settings"></i></button>
+    </div>
+
+    <!-- Phase upgrade alert -->
+    <div class="phase-alert" id="phase-alert">
+      <div class="phase-alert-title"><i class="ti ti-sparkles"></i>進入第二個月了！</div>
+      <div class="phase-alert-body" id="phase-alert-body">你已經訓練超過一個月，系統建議升級到「第二個月：強化期」的訓練動作。要套用新計畫嗎？</div>
+      <div class="phase-alert-btns">
+        <button class="btn-phase-apply" id="phase-apply-btn" onclick="applyNextPhase()">套用新計畫</button>
+        <button class="btn-phase-dismiss" onclick="dismissPhaseAlert()">稍後再說</button>
+      </div>
+    </div>
+
+    <div class="slbl">今日動作</div>
+    <div id="ex-container"></div>
+    <button class="btn-addex" onclick="openExModal()"><i class="ti ti-plus"></i>新增其他動作</button>
+    <button class="btn-done" onclick="finishWorkout()">完成訓練 ✓</button>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div class="page" id="page-history">
+
+    <!-- Countdown -->
+    <div class="slbl">目標倒數</div>
+    <div class="countdown-banner">
+      <div class="cd-icon"><i class="ti ti-mountain"></i></div>
+      <div style="flex:1;">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:2px;" id="cd-label">表銀座縱走 5 天</div>
+        <div style="display:flex;align-items:baseline;gap:6px;">
+          <div class="cd-days" id="cd-days">—</div>
+          <div style="font-size:13px;color:var(--tx2);">天後出發</div>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);" id="cd-sub"></div>
+      </div>
+      <button class="btn-ico" onclick="openCdModal()" style="color:var(--tx3);"><i class="ti ti-pencil"></i></button>
+    </div>
+
+    <!-- BF progress -->
+    <div class="slbl">體脂目標</div>
+    <div class="bf-card">
+      <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:12px;display:flex;justify-content:space-between;"><span>體脂進度</span><span style="font-size:12px;color:var(--tx2);">161cm · 53kg</span></div>
+      <div class="bf-nums">
+        <div class="bf-num"><div class="bf-val" style="color:var(--coral);">33%</div><div class="bf-lbl">現在</div></div>
+        <div class="bf-num"><div class="bf-val" style="color:var(--amber);">28%</div><div class="bf-lbl">第一目標</div></div>
+        <div class="bf-num"><div class="bf-val" style="color:var(--green);">25%</div><div class="bf-lbl">最終目標</div></div>
+      </div>
+      <div class="bf-bar-wrap">
+        <div class="bf-bar-fill" style="width:0%"></div>
+        <div style="position:absolute;top:0;bottom:0;width:2px;background:var(--green-d);left:61.5%;"></div>
+      </div>
+      <div class="bf-hint">↑ 綠線為最終目標 25%　還需減少約 4.2kg 純脂肪</div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="slbl">訓練月曆</div>
+    <div class="cal-card">
+      <div class="cal-hdr">
+        <div class="cal-month" id="cal-month-label"></div>
+        <div class="cal-nav">
+          <button onclick="calPrev()"><i class="ti ti-chevron-left"></i></button>
+          <button onclick="calNext()"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="cal-detail"></div>
+    </div>
+
+    <!-- AI suggestions -->
+    <div class="slbl">AI 下次建議</div>
+    <div class="ai-box" id="ai-suggest-box">
+      <div class="ai-box-ttl"><i class="ti ti-sparkles"></i>依你的體態與訓練紀錄分析</div>
+      <div id="ai-suggest-rows"></div>
+    </div>
+
+    <!-- Recent workouts -->
+    <div class="slbl">近期紀錄</div>
+    <div id="history-list"></div>
+
+    <!-- Edit plan -->
+    <div class="slbl">訓練計畫</div>
+    <button class="btn-addex" style="margin-top:0;" onclick="openPlanModal()"><i class="ti ti-edit"></i>修改訓練計畫</button>
+  </div>
+
+  <!-- DIET PAGE -->
+  <div class="page" id="page-diet">
+    <div class="slbl">今日營養</div>
+    <div class="mcgrid">
+      <div class="mc"><div class="mc-val" id="d-cal">0</div><div class="mc-lbl">卡路里</div><div class="mc-sub">目標 1600</div></div>
+      <div class="mc"><div class="mc-val prot-c" id="d-prot">0g</div><div class="mc-lbl">蛋白質</div><div class="mc-sub">目標 106g</div></div>
+      <div class="mc"><div class="mc-val carb-c" id="d-carb">0g</div><div class="mc-lbl">碳水</div><div class="mc-sub">目標 160g</div></div>
+      <div class="mc"><div class="mc-val fat-c" id="d-fat">0g</div><div class="mc-lbl">脂肪</div><div class="mc-sub">目標 53g</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin:5px 2px 14px;line-height:1.5;">蛋白質目標＝去脂體重（約35.5kg）×2g　熱量赤字約400kcal/天</div>
+
+    <!-- Water -->
+    <div class="slbl">今日喝水</div>
+    <div class="water-card">
+      <div class="water-hdr">
+        <div class="water-title"><i class="ti ti-droplet"></i>喝水紀錄</div>
+        <div class="water-ml"><span id="water-ml">0</span> / 1800 ml</div>
+      </div>
+      <div class="water-bar-wrap"><div class="water-bar-fill" id="water-fill" style="width:0%"></div></div>
+      <div class="water-btns">
+        <button class="water-btn" onclick="addWater(150)">+150ml<br><span style="font-size:10px;font-weight:400;">一杯</span></button>
+        <button class="water-btn" onclick="addWater(250)">+250ml<br><span style="font-size:10px;font-weight:400;">小瓶</span></button>
+        <button class="water-btn" onclick="addWater(350)">+350ml<br><span style="font-size:10px;font-weight:400;">大杯</span></button>
+        <button class="water-btn" onclick="addWater(600)">+600ml<br><span style="font-size:10px;font-weight:400;">大瓶</span></button>
+        <button class="water-btn water-latte" onclick="addWater(100)">拿鐵<br><span style="font-size:10px;font-weight:400;">算50%</span></button>
+      </div>
+      <div class="water-undo" id="water-undo">
+        <span id="water-undo-txt">已加 150ml</span>
+        <button class="btn-undo" onclick="undoWater()">撤銷</button>
+      </div>
+    </div>
+
+    <div class="slbl">餐點紀錄</div>
+
+    <!-- Photo AI -->
+    <button class="btn-photo" onclick="openPhotoModal()"><i class="ti ti-camera"></i>拍照 AI 辨識食物熱量</button>
+
+    <div class="meal-grp">
+      <div class="meal-ttl"><i class="ti ti-sun"></i>早餐</div>
+      <div class="quick-row">
+        <button class="quick-chip" onclick="quickAdd('meal-breakfast','地瓜小條',130,3,30,0)">地瓜</button>
+        <button class="quick-chip" onclick="quickAdd('meal-breakfast','無糖豆漿',60,5,7,2)">無糖豆漿</button>
+        <button class="quick-chip" onclick="quickAdd('meal-breakfast','水煮蛋',78,6,0,5)">水煮蛋</button>
+        <button class="quick-chip" onclick="quickAdd('meal-breakfast','大熱拿',120,6,10,5)">大熱拿</button>
+      </div>
+      <div id="meal-breakfast"></div>
+      <button class="btn-addfood" onclick="openFoodModal('早餐','meal-breakfast')"><i class="ti ti-plus"></i>新增食物</button>
+    </div>
+    <div class="meal-grp">
+      <div class="meal-ttl"><i class="ti ti-clock"></i>午餐</div>
+      <div class="quick-row">
+        <button class="quick-chip" onclick="quickAdd('meal-lunch','雞胸肉100g',165,31,0,4)">雞胸肉</button>
+        <button class="quick-chip" onclick="quickAdd('meal-lunch','烤雞三明治',320,22,35,9)">烤雞三明治</button>
+        <button class="quick-chip" onclick="quickAdd('meal-lunch','里肌豬排吐司',310,18,38,8)">里肌豬排吐司</button>
+        <button class="quick-chip" onclick="quickAdd('meal-lunch','燕麥杯',210,8,35,4)">燕麥杯</button>
+      </div>
+      <div id="meal-lunch"></div>
+      <button class="btn-addfood" onclick="openFoodModal('午餐','meal-lunch')"><i class="ti ti-plus"></i>新增食物</button>
+    </div>
+    <div class="meal-grp">
+      <div class="meal-ttl"><i class="ti ti-moon"></i>晚餐</div>
+      <div class="quick-row">
+        <button class="quick-chip" onclick="quickAdd('meal-dinner','小碗乾麵',280,8,50,6)">小碗乾麵</button>
+        <button class="quick-chip" onclick="quickAdd('meal-dinner','迷你牛丼',380,18,52,10)">迷你牛丼</button>
+        <button class="quick-chip" onclick="quickAdd('meal-dinner','鍋貼8顆',320,14,42,10)">鍋貼8顆</button>
+        <button class="quick-chip" onclick="quickAdd('meal-dinner','燙青菜',30,2,4,0)">燙青菜</button>
+        <button class="quick-chip" onclick="quickAdd('meal-dinner','滷豆干',80,8,4,3)">滷豆干</button>
+      </div>
+      <div id="meal-dinner"></div>
+      <button class="btn-addfood" onclick="openFoodModal('晚餐','meal-dinner')"><i class="ti ti-plus"></i>新增食物</button>
+    </div>
+    <div class="meal-grp">
+      <div class="meal-ttl"><i class="ti ti-bottle"></i>補充品 / 點心</div>
+      <div class="quick-row">
+        <button class="quick-chip" onclick="quickAdd('meal-snack','乳清蛋白',130,25,3,2)">乳清蛋白</button>
+        <button class="quick-chip" onclick="quickAdd('meal-snack','Lacto-fit益生菌',10,0,2,0)">益生菌</button>
+        <button class="quick-chip" onclick="quickAdd('meal-snack','堅果一把',90,3,3,8)">堅果</button>
+      </div>
+      <div id="meal-snack"></div>
+      <button class="btn-addfood" onclick="openFoodModal('補充品','meal-snack')"><i class="ti ti-plus"></i>新增食物</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bnav">
+  <div class="nitem active" id="nav-workout" onclick="switchPage('workout')"><i class="ti ti-barbell"></i>訓練</div>
+  <div class="nitem" id="nav-history" onclick="switchPage('history')"><i class="ti ti-chart-bar"></i>紀錄</div>
+  <div class="nitem" id="nav-diet" onclick="switchPage('diet')"><i class="ti ti-salad"></i>飲食</div>
+</nav>
+
+<!-- EXERCISE MODAL -->
+<div class="modal-bg" id="ex-modal">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <h3>新增訓練動作</h3>
+    <label class="flbl">動作名稱</label>
+    <input class="finp" type="text" id="ex-name-inp" placeholder="例：深蹲、引體向上...">
+    <label class="flbl">肌肉群</label>
+    <div class="chip-row" id="muscle-chips">
+      <button class="chip" onclick="toggleChip(this)">胸</button>
+      <button class="chip" onclick="toggleChip(this)">背</button>
+      <button class="chip" onclick="toggleChip(this)">腿</button>
+      <button class="chip" onclick="toggleChip(this)">肩</button>
+      <button class="chip" onclick="toggleChip(this)">手臂</button>
+      <button class="chip" onclick="toggleChip(this)">核心</button>
+      <button class="chip" onclick="toggleChip(this)">臀部</button>
+      <button class="chip" onclick="toggleChip(this)">有氧</button>
+    </div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal('ex-modal')">取消</button>
+      <button class="btn-ok" onclick="confirmAddEx()">新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOD MODAL -->
+<div class="modal-bg" id="food-modal">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <h3 id="food-modal-ttl">新增食物</h3>
+    <label class="flbl">食物名稱（輸入後點 AI 查詢或按 Enter）</label>
+    <div style="display:flex;gap:8px;margin-bottom:11px;">
+      <input class="finp" style="margin-bottom:0;flex:1;" type="text" id="food-name-inp" placeholder="例：雞胸肉100g、茶葉蛋1顆...">
+      <button onclick="fetchNutrition()" style="padding:0 14px;background:var(--green);border:none;border-radius:var(--r-s);color:white;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">AI 查詢</button>
+    </div>
+    <div id="ai-loading" style="display:none;" class="ai-loading"><div class="spinner"></div>AI 正在查詢營養成分...</div>
+    <div id="nutr-result" style="display:none;" class="nutr-result"></div>
+    <label class="flbl">手動輸入 / 確認數值</label>
+    <div class="g2">
+      <div><label class="flbl">蛋白質 (g)</label><input class="finp" type="number" inputmode="decimal" id="f-p" placeholder="0"></div>
+      <div><label class="flbl">碳水 (g)</label><input class="finp" type="number" inputmode="decimal" id="f-c" placeholder="0"></div>
+      <div><label class="flbl">脂肪 (g)</label><input class="finp" type="number" inputmode="decimal" id="f-f" placeholder="0"></div>
+      <div><label class="flbl">卡路里</label><input class="finp" type="number" inputmode="numeric" id="f-k" placeholder="自動計算"></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal('food-modal')">取消</button>
+      <button class="btn-ok" onclick="confirmAddFood()">記錄</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT FOOD MODAL -->
+<div class="modal-bg" id="edit-food-modal">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <h3>編輯食物</h3>
+    <label class="flbl">食物名稱</label>
+    <input class="finp" type="text" id="ef-name">
+    <div class="g2">
+      <div><label class="flbl">蛋白質 (g)</label><input class="finp" type="number" inputmode="decimal" id="ef-p"></div>
+      <div><label class="flbl">碳水 (g)</label><input class="finp" type="number" inputmode="decimal" id="ef-c"></div>
+      <div><label class="flbl">脂肪 (g)</label><input class="finp" type="number" inputmode="decimal" id="ef-f"></div>
+      <div><label class="flbl">卡路里</label><input class="finp" type="number" inputmode="numeric" id="ef-k"></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn-cancel" style="color:var(--coral);background:var(--coral-l);" onclick="deleteFood()">刪除</button>
+      <button class="btn-ok" onclick="confirmEditFood()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO MODAL -->
+<div class="modal-bg" id="photo-modal">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <h3>拍照辨識食物</h3>
+    <label class="flbl">選擇或拍攝照片</label>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoSelect(event)">
+    <button class="btn-photo" style="margin-bottom:11px;" onclick="document.getElementById('photo-input').click()"><i class="ti ti-camera"></i>選擇 / 拍攝照片</button>
+    <img id="photo-preview" class="photo-preview">
+    <div id="photo-loading" style="display:none;" class="ai-loading"><div class="spinner" style="border-color:rgba(83,74,183,0.3);border-top-color:var(--purple);"></div>AI 正在辨識食物...</div>
+    <div id="photo-result" style="display:none;" class="nutr-result"></div>
+    <label class="flbl" id="photo-meal-lbl" style="display:none;">記錄到哪一餐？</label>
+    <div class="chip-row" id="photo-meal-chips" style="display:none;">
+      <button class="chip sel" onclick="selectMealChip(this,'meal-breakfast')">早餐</button>
+      <button class="chip" onclick="selectMealChip(this,'meal-lunch')">午餐</button>
+      <button class="chip" onclick="selectMealChip(this,'meal-dinner')">晚餐</button>
+      <button class="chip" onclick="selectMealChip(this,'meal-snack')">補充品</button>
+    </div>
+    <div class="mbtns" id="photo-mbtns" style="display:none;">
+      <button class="btn-cancel" onclick="closeModal('photo-modal')">取消</button>
+      <button class="btn-ok btn-ok-purple" onclick="confirmPhotoFood()">記錄</button>
+    </div>
+    <div class="mbtns" id="photo-close-btn">
+      <button class="btn-cancel" style="flex:2;" onclick="closeModal('photo-modal')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE MODAL -->
+<div class="modal-bg" id="phase-modal">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <h3>訓練階段設定</h3>
+    <label class="flbl">開始訓練日期</label>
+    <input class="finp" type="date" id="phase-start-inp">
+    <label class="flbl">目前階段</label>
+    <div class="chip-row" id="phase-chips">
+      <button class="chip sel" onclick="selectPhaseChip(this,1)">第一個月</button>
+      <button class="chip" onclick="selectPhaseChip(this,2)">第二個月</button>
+      <button class="chip" onclick="selectPhaseChip(this,3)">第三個月</button>
+    </div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal('phase-modal')">取消</button>
+      <button class="btn-ok" onclick="confirmPhase()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAN MODAL -->
+<div class="modal-bg" id="plan-modal">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <h3>修改訓練計畫</h3>
+    <label class="flbl">貼上你的健身對話或計畫內容，AI 會重新為你生成動作清單</label>
+    <textarea class="ftarea" id="plan-text" placeholder="例如：貼上 Gemini 或其他對話內容，或直接寫下你想調整的方向..."></textarea>
+    <label class="flbl">套用到哪個階段？</label>
+    <div class="chip-row" id="plan-phase-chips">
+      <button class="chip sel" onclick="selectPlanPhaseChip(this,1)">第一個月</button>
+      <button class="chip" onclick="selectPlanPhaseChip(this,2)">第二個月</button>
+      <button class="chip" onclick="selectPlanPhaseChip(this,3)">第三個月</button>
+    </div>
+    <div id="plan-loading" style="display:none;" class="ai-loading"><div class="spinner"></div>AI 正在分析你的計畫...</div>
+    <div id="plan-preview" class="plan-preview"></div>
+    <div class="mbtns" id="plan-mbtns">
+      <button class="btn-cancel" onclick="closeModal('plan-modal')">取消</button>
+      <button class="btn-ok btn-ok-blue" onclick="generatePlan()">AI 生成計畫</button>
+    </div>
+    <div class="mbtns" id="plan-apply-btns" style="display:none;">
+      <button class="btn-cancel" onclick="closeModal('plan-modal')">取消</button>
+      <button class="btn-ok" onclick="applyGeneratedPlan()">套用計畫</button>
+    </div>
+  </div>
+</div>
+
+<!-- COUNTDOWN MODAL -->
+<div class="modal-bg" id="cd-modal">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <h3>設定縱走日期</h3>
+    <label class="flbl">出發日期</label>
+    <input class="finp" type="date" id="cd-date-inp" value="2025-10-01">
+    <label class="flbl">行程名稱</label>
+    <input class="finp" type="text" id="cd-name-inp" value="表銀座縱走 5 天">
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal('cd-modal')">取消</button>
+      <button class="btn-ok" onclick="confirmCd()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== TRAINING PLANS ==========
+const DEFAULT_PLANS = {
+  1: {
+    name:'第一個月：基礎建立期',
+    color:'m1',
+    exercises:[
+      {name:'坐姿推腿機',muscle:'股四頭肌 · 臀大肌 · 腿後肌',suggest:'建議起始 30kg',note:'機器輔助 · 初學友善',type:'weight',sets:[{w:30,r:12},{w:30,r:12},{w:30,r:10}]},
+      {name:'滑輪下拉',muscle:'背闊肌 · 大圓肌 · 肱二頭肌',suggest:'建議起始 20kg',note:'寬握 · 控制速度',type:'weight',sets:[{w:20,r:12},{w:20,r:12},{w:20,r:10}]},
+      {name:'胸部推舉機',muscle:'胸大肌 · 三角肌前束 · 肱三頭肌',suggest:'建議起始 15kg',note:'機器穩定 · 適合初學',type:'weight',sets:[{w:15,r:12},{w:15,r:12},{w:15,r:10}]},
+      {name:'棒式（Plank）',muscle:'核心 · 腹橫肌 · 豎脊肌',suggest:'目標 30秒 × 3組',note:'計時模式',type:'plank',target:30},
+      {name:'跑步機坡度快走',muscle:'有氧 · 臀腿 · 心肺',suggest:'坡度 8% · 5.5km/h',note:'20-30 分鐘',type:'cardio',sets:[{t:20,i:8,s:5.5}]}
+    ],
+    suggestions:[
+      {name:'坐姿推腿機',val:'30kg → 35kg ↑',cls:'up'},
+      {name:'滑輪下拉',val:'20kg → 22.5kg ↑',cls:'up'},
+      {name:'胸部推舉機',val:'15kg → 20kg ↑',cls:'up'},
+      {name:'棒式',val:'30秒 → 40秒 ↑',cls:'up'},
+      {name:'跑步機坡度快走',val:'坡度 10% · 25分鐘',cls:'cardio'}
+    ]
+  },
+  2: {
+    name:'第二個月：強化期',
+    color:'m2',
+    exercises:[
+      {name:'坐姿推腿機',muscle:'股四頭肌 · 臀大肌 · 腿後肌',suggest:'目標 40-50kg',note:'增加重量 · 降至10次',type:'weight',sets:[{w:40,r:10},{w:45,r:10},{w:45,r:8},{w:40,r:10}]},
+      {name:'滑輪下拉',muscle:'背闊肌 · 大圓肌 · 肱二頭肌',suggest:'目標 25-30kg',note:'窄握變化 · 增強背厚',type:'weight',sets:[{w:25,r:10},{w:27.5,r:10},{w:27.5,r:8}]},
+      {name:'胸部推舉機',muscle:'胸大肌 · 三角肌前束 · 肱三頭肌',suggest:'目標 20-25kg',note:'縮短組間休息',type:'weight',sets:[{w:20,r:10},{w:22.5,r:10},{w:22.5,r:8}]},
+      {name:'坐姿划船機',muscle:'菱形肌 · 背闊肌 · 肱二頭肌',suggest:'建議起始 20kg',note:'新動作 · 強化後背',type:'weight',sets:[{w:20,r:12},{w:20,r:10},{w:20,r:10}]},
+      {name:'棒式（Plank）',muscle:'核心 · 腹橫肌 · 豎脊肌',suggest:'目標 45秒 × 3組',note:'計時模式',type:'plank',target:45},
+      {name:'跑步機坡度快走',muscle:'有氧 · 臀腿 · 心肺',suggest:'坡度 10% · 25分鐘',note:'提高坡度強度',type:'cardio',sets:[{t:25,i:10,s:5.5}]}
+    ],
+    suggestions:[
+      {name:'坐姿推腿機',val:'45kg → 50kg ↑',cls:'up'},
+      {name:'滑輪下拉',val:'27.5kg → 30kg ↑',cls:'up'},
+      {name:'胸部推舉機',val:'22.5kg → 25kg ↑',cls:'up'},
+      {name:'坐姿划船機',val:'20kg → 22.5kg ↑',cls:'up'},
+      {name:'棒式',val:'45秒 → 60秒 ↑',cls:'up'},
+      {name:'跑步機',val:'坡度 12% · 28分鐘',cls:'cardio'}
+    ]
+  },
+  3: {
+    name:'第三個月：表銀座備戰期',
+    color:'m3',
+    exercises:[
+      {name:'坐姿推腿機',muscle:'股四頭肌 · 臀大肌 · 腿後肌',suggest:'目標 55-60kg',note:'重裝縱走強化腿力',type:'weight',sets:[{w:50,r:10},{w:55,r:10},{w:55,r:8},{w:50,r:10}]},
+      {name:'滑輪下拉',muscle:'背闊肌 · 大圓肌 · 肱二頭肌',suggest:'目標 32.5kg',note:'模擬鐵梯攀爬拉力',type:'weight',sets:[{w:30,r:10},{w:32.5,r:10},{w:32.5,r:8}]},
+      {name:'胸部推舉機',muscle:'胸大肌 · 三角肌前束 · 肱三頭肌',suggest:'目標 27.5kg',note:'維持上肢推力',type:'weight',sets:[{w:25,r:10},{w:27.5,r:10},{w:27.5,r:8}]},
+      {name:'坐姿划船機',muscle:'菱形肌 · 背闊肌 · 肱二頭肌',suggest:'目標 27.5kg',note:'背包支撐力',type:'weight',sets:[{w:25,r:10},{w:27.5,r:10},{w:27.5,r:8}]},
+      {name:'棒式（Plank）',muscle:'核心 · 腹橫肌 · 豎脊肌',suggest:'目標 60秒 × 3組',note:'稜線平衡強化',type:'plank',target:60},
+      {name:'跑步機坡度快走',muscle:'有氧 · 臀腿 · 心肺',suggest:'坡度 12-15% · 30分鐘',note:'模擬合戰尾根陡坡',type:'cardio',sets:[{t:30,i:12,s:5.5}]}
+    ],
+    suggestions:[
+      {name:'坐姿推腿機',val:'55kg → 60kg ↑',cls:'up'},
+      {name:'滑輪下拉',val:'32.5kg 維持 × 完美動作',cls:'hold'},
+      {name:'胸部推舉機',val:'27.5kg → 30kg ↑',cls:'up'},
+      {name:'坐姿划船機',val:'27.5kg → 30kg ↑',cls:'up'},
+      {name:'棒式',val:'60秒 達成！維持',cls:'hold'},
+      {name:'跑步機',val:'坡度 15% · 30分鐘',cls:'cardio'}
+    ]
+  }
+};
+
+// ========== STATE ==========
+let plans = JSON.parse(JSON.stringify(DEFAULT_PLANS)); // deep copy, user can modify
+let currentPhase = 1;
+let phaseStartDate = null;
+let selectedPlanPhase = 1;
+let selectedPhotoMeal = 'meal-breakfast';
+let pendingPhotoFood = null;
+let generatedPlanData = null;
+
+let currentMealId='', currentMealName='', editingFoodEl=null;
+let timerSec=0, timerOn=false, timerIv;
+let totals={cal:0,p:0,c:0,f:0};
+let waterMl=0; const WATER_GOAL=1800;
+let lastWaterAdded=0, waterUndoTimer=null;
+let cdDate=new Date('2025-10-01'), cdName='表銀座縱走 5 天';
+let plankSec=0, plankOn=false, plankIv, plankDone=0;
+let calYear, calMonth;
+let workoutLog = {}; // { 'YYYY-MM-DD': { name, minutes, exercises } }
+
+// ========== INIT ==========
+(function(){
+  const now=new Date();
+  const days=['日','一','二','三','四','五','六'];
+  document.getElementById('pg-date').textContent=`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} 週${days[now.getDay()]}`;
+  calYear=now.getFullYear(); calMonth=now.getMonth();
+  updateCountdown();
+  renderPhase();
+  renderExercises();
+  renderCalendar();
+  renderAiSuggestions();
+  checkPhaseUpgrade();
+})();
+
+// ========== PHASE ==========
+function renderPhase(){
+  const p = plans[currentPhase];
+  const banner = document.getElementById('phase-banner');
+  banner.className='phase-banner '+p.color;
+  document.getElementById('phase-dot').className='phase-dot '+p.color;
+  document.getElementById('phase-dot').textContent=currentPhase;
+  document.getElementById('phase-name').textContent=p.name;
+  if(phaseStartDate){
+    const days=Math.floor((new Date()-phaseStartDate)/(1000*60*60*24));
+    const remaining=30-days;
+    document.getElementById('phase-start-display').textContent=phaseStartDate.toLocaleDateString('zh-TW');
+    document.getElementById('phase-days-left').textContent=remaining>0?`距下一階段 ${remaining} 天`:'本階段已完成';
+  } else {
+    document.getElementById('phase-start-display').textContent='請設定';
+    document.getElementById('phase-days-left').textContent='';
+  }
+}
+
+function checkPhaseUpgrade(){
+  if(!phaseStartDate||currentPhase>=3) return;
+  const days=Math.floor((new Date()-phaseStartDate)/(1000*60*60*24));
+  if(days>=30){
+    const alert=document.getElementById('phase-alert');
+    const nextPhase=currentPhase+1;
+    const nextName=plans[nextPhase].name;
+    document.getElementById('phase-alert-body').textContent=`你已經訓練超過一個月，系統建議升級到「${nextName}」的訓練動作。要套用新計畫嗎？`;
+    document.getElementById('phase-apply-btn').textContent=`套用${nextName}`;
+    alert.style.display='block';
+  }
+}
+function applyNextPhase(){
+  currentPhase=Math.min(currentPhase+1,3);
+  document.getElementById('phase-alert').style.display='none';
+  phaseStartDate=new Date();
+  renderPhase();
+  renderExercises();
+  renderAiSuggestions();
+  showToast('已升級到'+plans[currentPhase].name+' 🎉');
+}
+function dismissPhaseAlert(){ document.getElementById('phase-alert').style.display='none'; }
+
+function openPhaseModal(){
+  const inp=document.getElementById('phase-start-inp');
+  inp.value=phaseStartDate?phaseStartDate.toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+  document.querySelectorAll('#phase-chips .chip').forEach((c,i)=>{
+    c.className='chip'+(i+1===currentPhase?' sel':'');
+  });
+  document.getElementById('phase-modal').classList.add('open');
+}
+function selectPhaseChip(el,n){
+  document.querySelectorAll('#phase-chips .chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  currentPhase=n;
+}
+function confirmPhase(){
+  const d=document.getElementById('phase-start-inp').value;
+  if(d) phaseStartDate=new Date(d);
+  renderPhase();
+  renderExercises();
+  renderAiSuggestions();
+  checkPhaseUpgrade();
+  closeModal('phase-modal');
+  showToast('訓練階段已更新');
+}
+
+// ========== RENDER EXERCISES ==========
+function renderExercises(){
+  const container=document.getElementById('ex-container');
+  container.innerHTML='';
+  const plan=plans[currentPhase];
+  plan.exercises.forEach(ex=>{
+    const card=document.createElement('div');
+    card.className='ex-card';
+    if(ex.type==='plank'){
+      card.innerHTML=buildPlankCard(ex);
+    } else if(ex.type==='cardio'){
+      card.innerHTML=buildCardioCard(ex);
+    } else {
+      card.innerHTML=buildWeightCard(ex);
+    }
+    container.appendChild(card);
+  });
+}
+
+function buildWeightCard(ex){
+  let rows='';
+  ex.sets.forEach((s,i)=>{
+    rows+=`<tr><td class="snum">${i+1}</td><td><input class="ninp" type="number" inputmode="decimal" value="${s.w}" step="2.5"></td><td><input class="ninp" type="number" inputmode="numeric" value="${s.r}"></td><td><div class="set-check" onclick="toggleSetCheck(this)"><i class="ti ti-check"></i></div></td><td><button class="btn-ico" onclick="removeSet(this)"><i class="ti ti-minus"></i></button></td></tr>`;
+  });
+  return `<div class="ex-hdr"><div><div class="ex-name">${ex.name}</div><div class="ex-muscle">${ex.muscle}</div><div class="ex-meta"><div class="ai-chip"><i class="ti ti-sparkles"></i>${ex.suggest}</div><div class="note-chip">${ex.note}</div></div></div><button class="btn-ico" onclick="removeEx(this)"><i class="ti ti-trash"></i></button></div>
+  <table class="stbl"><thead><tr><th>組</th><th>重量 kg</th><th>次數</th><th></th><th></th></tr></thead><tbody>${rows}</tbody></table>
+  <button class="btn-addset" onclick="addSet(this)"><i class="ti ti-plus"></i>新增組數</button>`;
+}
+
+function buildCardioCard(ex){
+  let rows='';
+  ex.sets.forEach((s,i)=>{
+    rows+=`<tr><td class="snum">${i+1}</td><td><input class="ninp" type="number" inputmode="numeric" value="${s.t}" step="5"></td><td><input class="ninp" type="number" inputmode="numeric" value="${s.i}" step="1"></td><td><input class="ninp" type="number" inputmode="decimal" value="${s.s}" step="0.5"></td><td><div class="set-check" onclick="toggleSetCheck(this)"><i class="ti ti-check"></i></div></td><td><button class="btn-ico" onclick="removeSet(this)"><i class="ti ti-minus"></i></button></td></tr>`;
+  });
+  return `<div class="ex-hdr"><div><div class="ex-name">${ex.name}</div><div class="ex-muscle">${ex.muscle}</div><div class="ex-meta"><div class="ai-chip"><i class="ti ti-sparkles"></i>${ex.suggest}</div><div class="note-chip">${ex.note}</div></div></div><button class="btn-ico" onclick="removeEx(this)"><i class="ti ti-trash"></i></button></div>
+  <table class="stbl"><thead><tr><th>組</th><th>時間(分)</th><th>坡度%</th><th>速度</th><th></th><th></th></tr></thead><tbody>${rows}</tbody></table>
+  <button class="btn-addset" onclick="addSet(this)"><i class="ti ti-plus"></i>新增組數</button>`;
+}
+
+function buildPlankCard(ex){
+  return `<div class="ex-hdr"><div><div class="ex-name">${ex.name}</div><div class="ex-muscle">${ex.muscle}</div><div class="ex-meta"><div class="ai-chip"><i class="ti ti-sparkles"></i>${ex.suggest}</div><div class="note-chip">${ex.note}</div></div></div><button class="btn-ico" onclick="removeEx(this)"><i class="ti ti-trash"></i></button></div>
+  <div style="font-size:12px;color:var(--tx2);margin-bottom:8px;">已完成組數：<span id="plank-sets-done" style="font-weight:600;color:var(--tx);">0</span> / 3</div>
+  <div class="plank-timer-row"><div class="plank-display" id="plank-display">00:${String(ex.target).padStart(2,'0')}</div><button class="btn-plank btn-ps" id="plank-start-btn" onclick="plankStart()">開始</button><button class="btn-plank btn-pp" id="plank-stop-btn" onclick="plankStop()" style="display:none;">停止</button><button class="btn-plank btn-pr" onclick="plankReset()">重置</button></div>
+  <div style="margin-top:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--tx2);">目標秒數</span><input class="ninp" type="number" inputmode="numeric" value="${ex.target}" step="5" id="plank-target" style="width:60px;" onchange="plankReset()"><span style="font-size:12px;color:var(--tx2);">秒</span></div>`;
+}
+
+function renderAiSuggestions(){
+  const rows=document.getElementById('ai-suggest-rows');
+  rows.innerHTML='';
+  plans[currentPhase].suggestions.forEach(s=>{
+    const div=document.createElement('div');
+    div.className='ai-row';
+    div.innerHTML=`<span class="ai-rname">${s.name}</span><span class="ai-rval ${s.cls}">${s.val}</span>`;
+    rows.appendChild(div);
+  });
+}
+
+// ========== PLAN MODAL ==========
+function openPlanModal(){
+  document.getElementById('plan-text').value='';
+  document.getElementById('plan-preview').style.display='none';
+  document.getElementById('plan-preview').textContent='';
+  document.getElementById('plan-mbtns').style.display='flex';
+  document.getElementById('plan-apply-btns').style.display='none';
+  document.getElementById('plan-loading').style.display='none';
+  generatedPlanData=null;
+  document.querySelectorAll('#plan-phase-chips .chip').forEach((c,i)=>{ c.className='chip'+(i+1===currentPhase?' sel':''); });
+  selectedPlanPhase=currentPhase;
+  document.getElementById('plan-modal').classList.add('open');
+}
+function selectPlanPhaseChip(el,n){
+  document.querySelectorAll('#plan-phase-chips .chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); selectedPlanPhase=n;
+}
+async function generatePlan(){
+  const text=document.getElementById('plan-text').value.trim();
+  if(!text){ showToast('請貼上對話或計畫內容'); return; }
+  document.getElementById('plan-loading').style.display='flex';
+  document.getElementById('plan-mbtns').style.display='none';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        system:`你是健身教練助理。使用者會貼上健身對話或計畫描述，請根據內容分析並生成一個訓練動作清單。
+只輸出 JSON，格式如下：
+{"phase_name":"階段名稱","exercises":[{"name":"動作名稱","muscle":"肌肉群","suggest":"建議重量或時間","note":"提示","type":"weight"},...]}
+type 可以是 weight（重量訓練）、plank（棒式計時）、cardio（有氧）。
+不要輸出任何其他文字。`,
+        messages:[{role:'user',content:`使用者資料：33歲女性、161cm、53kg、體脂33%、增肌減脂目標、10月表銀座縱走5天。\n\n對話內容：${text}`}]
+      })
+    });
+    const data=await resp.json();
+    const json=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    generatedPlanData=json;
+    const preview=document.getElementById('plan-preview');
+    preview.textContent=`✓ ${json.phase_name}\n\n動作清單：\n${json.exercises.map((e,i)=>`${i+1}. ${e.name}（${e.muscle}）- ${e.suggest}`).join('\n')}`;
+    preview.style.display='block';
+    document.getElementById('plan-apply-btns').style.display='flex';
+  } catch(e){ showToast('生成失敗，請稍後再試'); document.getElementById('plan-mbtns').style.display='flex'; }
+  document.getElementById('plan-loading').style.display='none';
+}
+function applyGeneratedPlan(){
+  if(!generatedPlanData) return;
+  const exs=generatedPlanData.exercises.map(e=>({
+    name:e.name, muscle:e.muscle||'', suggest:e.suggest||'', note:e.note||'',
+    type:e.type||'weight',
+    sets:e.type==='cardio'?[{t:20,i:8,s:5.5}]:e.type==='plank'?undefined:[{w:0,r:12},{w:0,r:12},{w:0,r:10}],
+    target:e.type==='plank'?30:undefined
+  }));
+  plans[selectedPlanPhase].name=generatedPlanData.phase_name||plans[selectedPlanPhase].name;
+  plans[selectedPlanPhase].exercises=exs;
+  if(selectedPlanPhase===currentPhase) renderExercises();
+  renderPhase();
+  closeModal('plan-modal');
+  showToast('計畫已更新 ✓');
+}
+
+// ========== WORKOUT ==========
+function toggleSetCheck(el){
+  el.classList.toggle('done');
+  startTimer();
+}
+function addSet(btn){
+  const tbody=btn.previousElementSibling.querySelector('tbody');
+  const rows=tbody.querySelectorAll('tr');
+  const n=rows.length+1;
+  const last=rows[rows.length-1];
+  const inputs=last?last.querySelectorAll('input'):[];
+  const tr=document.createElement('tr');
+  if(inputs.length>=3){
+    const v1=inputs[0].value,v2=inputs[1].value,v3=inputs[2].value;
+    tr.innerHTML=`<td class="snum">${n}</td><td><input class="ninp" type="number" inputmode="numeric" value="${v1}" step="5"></td><td><input class="ninp" type="number" inputmode="numeric" value="${v2}" step="1"></td><td><input class="ninp" type="number" inputmode="decimal" value="${v3}" step="0.5"></td><td><div class="set-check" onclick="toggleSetCheck(this)"><i class="ti ti-check"></i></div></td><td><button class="btn-ico" onclick="removeSet(this)"><i class="ti ti-minus"></i></button></td>`;
+  } else {
+    const v1=inputs[0]?inputs[0].value:'0', v2=inputs[1]?inputs[1].value:'10';
+    tr.innerHTML=`<td class="snum">${n}</td><td><input class="ninp" type="number" inputmode="decimal" value="${v1}" step="2.5"></td><td><input class="ninp" type="number" inputmode="numeric" value="${v2}"></td><td><div class="set-check" onclick="toggleSetCheck(this)"><i class="ti ti-check"></i></div></td><td><button class="btn-ico" onclick="removeSet(this)"><i class="ti ti-minus"></i></button></td>`;
+  }
+  tbody.appendChild(tr);
+  startTimer();
+}
+function removeSet(btn){
+  const tb=btn.closest('tbody');
+  btn.closest('tr').remove();
+  tb.querySelectorAll('tr').forEach((r,i)=>r.querySelector('.snum').textContent=i+1);
+}
+function removeEx(btn){ btn.closest('.ex-card').remove(); showToast('動作已移除'); }
+function openExModal(){
+  document.getElementById('ex-name-inp').value='';
+  document.querySelectorAll('#muscle-chips .chip').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('ex-modal').classList.add('open');
+}
+function confirmAddEx(){
+  const name=document.getElementById('ex-name-inp').value.trim();
+  if(!name){document.getElementById('ex-name-inp').focus();return;}
+  const muscles=[...document.querySelectorAll('#muscle-chips .chip.sel')].map(c=>c.textContent).join(' · ')||'未指定';
+  const card=document.createElement('div');
+  card.className='ex-card';
+  card.innerHTML=`<div class="ex-hdr"><div><div class="ex-name">${name}</div><div class="ex-muscle">${muscles}</div></div><button class="btn-ico" onclick="removeEx(this)"><i class="ti ti-trash"></i></button></div><table class="stbl"><thead><tr><th>組</th><th>重量 kg</th><th>次數</th><th></th><th></th></tr></thead><tbody><tr><td class="snum">1</td><td><input class="ninp" type="number" inputmode="decimal" value="0" step="2.5"></td><td><input class="ninp" type="number" inputmode="numeric" value="10"></td><td><div class="set-check" onclick="toggleSetCheck(this)"><i class="ti ti-check"></i></div></td><td><button class="btn-ico" onclick="removeSet(this)"><i class="ti ti-minus"></i></button></td></tr></tbody></table><button class="btn-addset" onclick="addSet(this)"><i class="ti ti-plus"></i>新增組數</button>`;
+  document.getElementById('ex-container').appendChild(card);
+  closeModal('ex-modal'); showToast('已新增 '+name); startTimer();
+}
+function finishWorkout(){
+  clearInterval(timerIv);
+  const mins=Math.floor(timerSec/60);
+  const exCards=[...document.querySelectorAll('#ex-container .ex-card')];
+  const nameList=exCards.map(c=>c.querySelector('.ex-name').textContent).join('、');
+  const today=new Date().toISOString().slice(0,10);
+  workoutLog[today]={name:nameList.length>14?nameList.substring(0,14)+'…':nameList, minutes:mins, exercises:exCards.length};
+  // add to history list
+  const item=document.createElement('div');
+  item.className='h-card';
+  item.innerHTML=`<div class="h-top"><div><div class="h-name">${workoutLog[today].name}</div><div class="h-date">剛完成 · ${mins} 分鐘</div></div><span class="tag tag-g">${plans[currentPhase].name.split('：')[0]}</span></div><div class="stats-row"><div class="stat"><i class="ti ti-checklist"></i><strong>${exCards.length}</strong> 個動作</div><div class="stat"><i class="ti ti-clock"></i><strong>${mins}</strong> 分鐘</div></div>`;
+  const list=document.getElementById('history-list');
+  list.insertBefore(item,list.firstChild);
+  timerSec=0; timerOn=false;
+  document.getElementById('timer').textContent='00:00';
+  renderCalendar();
+  showToast('訓練完成！已記錄 🎉');
+  setTimeout(()=>switchPage('history'),700);
+}
+
+// ========== PLANK ==========
+function plankStart(){
+  if(plankOn)return;
+  const target=parseInt(document.getElementById('plank-target').value)||30;
+  plankSec=target; plankOn=true;
+  document.getElementById('plank-start-btn').style.display='none';
+  document.getElementById('plank-stop-btn').style.display='';
+  document.getElementById('plank-display').classList.add('running');
+  plankIv=setInterval(()=>{
+    plankSec--;
+    const m=String(Math.floor(plankSec/60)).padStart(2,'0');
+    const s=String(plankSec%60).padStart(2,'0');
+    document.getElementById('plank-display').textContent=m+':'+s;
+    if(plankSec<=0){
+      clearInterval(plankIv); plankOn=false;
+      plankDone=Math.min(plankDone+1,3);
+      document.getElementById('plank-sets-done').textContent=plankDone;
+      document.getElementById('plank-display').textContent='完成！';
+      document.getElementById('plank-display').classList.remove('running');
+      document.getElementById('plank-start-btn').style.display='';
+      document.getElementById('plank-stop-btn').style.display='none';
+      showToast('棒式完成第 '+plankDone+' 組 💪');
+    }
+  },1000);
+  startTimer();
+}
+function plankStop(){
+  clearInterval(plankIv); plankOn=false;
+  document.getElementById('plank-start-btn').style.display='';
+  document.getElementById('plank-stop-btn').style.display='none';
+  document.getElementById('plank-display').classList.remove('running');
+}
+function plankReset(){
+  plankStop();
+  const t=parseInt(document.getElementById('plank-target').value)||30;
+  document.getElementById('plank-display').textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+}
+
+// ========== TIMER ==========
+function startTimer(){
+  if(timerOn)return; timerOn=true;
+  timerIv=setInterval(()=>{
+    timerSec++;
+    const m=String(Math.floor(timerSec/60)).padStart(2,'0');
+    const s=String(timerSec%60).padStart(2,'0');
+    document.getElementById('timer').textContent=m+':'+s;
+  },1000);
+}
+
+// ========== CALENDAR ==========
+function renderCalendar(){
+  const now=new Date();
+  const label=document.getElementById('cal-month-label');
+  label.textContent=`${calYear} 年 ${calMonth+1} 月`;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  ['日','一','二','三','四','五','六'].forEach(d=>{
+    const div=document.createElement('div');
+    div.className='cal-dow'; div.textContent=d; grid.appendChild(div);
+  });
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const prevDays=new Date(calYear,calMonth,0).getDate();
+  for(let i=0;i<firstDay;i++){
+    const div=document.createElement('div');
+    div.className='cal-day other-month';
+    div.textContent=prevDays-firstDay+1+i;
+    grid.appendChild(div);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const div=document.createElement('div');
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=now.getFullYear()===calYear&&now.getMonth()===calMonth&&now.getDate()===d;
+    div.className='cal-day'+(workoutLog[dateStr]?' has-workout':'')+(isToday?' today':'');
+    div.textContent=d;
+    if(workoutLog[dateStr]){
+      const dot=document.createElement('div'); dot.className='cal-dot'; div.appendChild(dot);
+      div.onclick=()=>showCalDetail(dateStr);
+    }
+    grid.appendChild(div);
+  }
+  const remaining=(7-((firstDay+daysInMonth)%7))%7;
+  for(let i=1;i<=remaining;i++){
+    const div=document.createElement('div'); div.className='cal-day other-month'; div.textContent=i; grid.appendChild(div);
+  }
+}
+function showCalDetail(dateStr){
+  const w=workoutLog[dateStr];
+  const detail=document.getElementById('cal-detail');
+  if(!w){ detail.innerHTML=''; return; }
+  detail.innerHTML=`<div class="workout-detail"><strong>${dateStr}</strong> · ${w.name} · <strong>${w.minutes} 分鐘</strong> · ${w.exercises} 個動作</div>`;
+}
+function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+// ========== COUNTDOWN ==========
+function updateCountdown(){
+  const now=new Date(); now.setHours(0,0,0,0);
+  const t=new Date(cdDate); t.setHours(0,0,0,0);
+  const diff=Math.ceil((t-now)/(1000*60*60*24));
+  document.getElementById('cd-days').textContent=diff>0?diff:'出發了！';
+  document.getElementById('cd-label').textContent=cdName;
+  document.getElementById('cd-sub').textContent=cdDate.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'});
+}
+function openCdModal(){
+  document.getElementById('cd-date-inp').value=cdDate.toISOString().slice(0,10);
+  document.getElementById('cd-name-inp').value=cdName;
+  document.getElementById('cd-modal').classList.add('open');
+}
+function confirmCd(){
+  cdDate=new Date(document.getElementById('cd-date-inp').value);
+  cdName=document.getElementById('cd-name-inp').value||cdName;
+  updateCountdown(); closeModal('cd-modal'); showToast('已更新目標日期');
+}
+
+// ========== NAV ==========
+const pageTitles={workout:'今日訓練',history:'歷史紀錄',diet:'飲食紀錄'};
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  document.getElementById('pg-title').textContent=pageTitles[name];
+  document.getElementById('timer-pill').style.opacity=name==='workout'?'1':'0';
+  document.getElementById('scroll').scrollTop=0;
+}
+
+// ========== WATER ==========
+function addWater(ml){
+  lastWaterAdded=ml;
+  waterMl=Math.min(waterMl+ml,WATER_GOAL+500);
+  document.getElementById('water-ml').textContent=waterMl;
+  document.getElementById('water-fill').style.width=Math.min(waterMl/WATER_GOAL*100,100)+'%';
+  // show undo
+  const undo=document.getElementById('water-undo');
+  document.getElementById('water-undo-txt').textContent=`已加 ${ml}ml`;
+  undo.classList.add('show');
+  if(waterUndoTimer) clearTimeout(waterUndoTimer);
+  waterUndoTimer=setTimeout(()=>undo.classList.remove('show'),5000);
+  if(waterMl>=WATER_GOAL) showToast('今日喝水達標 💧');
+}
+function undoWater(){
+  waterMl=Math.max(0,waterMl-lastWaterAdded);
+  document.getElementById('water-ml').textContent=waterMl;
+  document.getElementById('water-fill').style.width=Math.min(waterMl/WATER_GOAL*100,100)+'%';
+  document.getElementById('water-undo').classList.remove('show');
+  showToast('已撤銷 +'+lastWaterAdded+'ml');
+}
+
+// ========== DIET ==========
+function updateTotals(){
+  document.getElementById('d-cal').textContent=Math.round(totals.cal);
+  document.getElementById('d-prot').textContent=Math.round(totals.p)+'g';
+  document.getElementById('d-carb').textContent=Math.round(totals.c)+'g';
+  document.getElementById('d-fat').textContent=Math.round(totals.f)+'g';
+}
+function quickAdd(mealId,name,k,p,c,f){
+  addFoodRow(document.getElementById(mealId),name,p,c,f,k);
+  totals.cal+=k; totals.p+=p; totals.c+=c; totals.f+=f;
+  updateTotals(); showToast('已記錄 '+name);
+}
+function openFoodModal(mealName,mealId){
+  currentMealName=mealName; currentMealId=mealId;
+  document.getElementById('food-modal-ttl').textContent='新增'+mealName;
+  ['food-name-inp','f-p','f-c','f-f','f-k'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ai-loading').style.display='none';
+  document.getElementById('nutr-result').style.display='none';
+  document.getElementById('food-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('food-name-inp').focus(),300);
+}
+async function fetchNutrition(){
+  const fn=document.getElementById('food-name-inp').value.trim();
+  if(!fn){showToast('請先輸入食物名稱');return;}
+  document.getElementById('ai-loading').style.display='flex';
+  document.getElementById('nutr-result').style.display='none';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:300,
+        system:`你是台灣飲食營養查詢助手。只輸出 JSON：{"name":"食物名稱","cal":整數,"protein":克數,"carb":克數,"fat":克數,"note":"簡短備註"}`,
+        messages:[{role:'user',content:`食物：${fn}`}]
+      })
+    });
+    const data=await resp.json();
+    const json=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    document.getElementById('f-p').value=json.protein;
+    document.getElementById('f-c').value=json.carb;
+    document.getElementById('f-f').value=json.fat;
+    document.getElementById('f-k').value=json.cal;
+    const r=document.getElementById('nutr-result');
+    r.innerHTML=`<div class="nr-title">✓ ${json.name}${json.note?' <span style="font-weight:400;color:var(--tx2);font-size:12px;">· '+json.note+'</span>':''}</div><div class="nutr-grid"><div class="ng-item"><div class="ng-val">${json.cal}</div><div class="ng-lbl">卡路里</div></div><div class="ng-item"><div class="ng-val prot-c">${json.protein}g</div><div class="ng-lbl">蛋白質</div></div><div class="ng-item"><div class="ng-val carb-c">${json.carb}g</div><div class="ng-lbl">碳水</div></div><div class="ng-item"><div class="ng-val fat-c">${json.fat}g</div><div class="ng-lbl">脂肪</div></div></div>`;
+    r.style.display='block';
+  }catch(e){showToast('查詢失敗，請手動輸入');}
+  document.getElementById('ai-loading').style.display='none';
+}
+function confirmAddFood(){
+  const name=document.getElementById('food-name-inp').value.trim();
+  if(!name){document.getElementById('food-name-inp').focus();return;}
+  const p=parseFloat(document.getElementById('f-p').value)||0;
+  const c=parseFloat(document.getElementById('f-c').value)||0;
+  const f=parseFloat(document.getElementById('f-f').value)||0;
+  const k=parseInt(document.getElementById('f-k').value)||Math.round(p*4+c*4+f*9);
+  addFoodRow(document.getElementById(currentMealId),name,p,c,f,k);
+  totals.cal+=k; totals.p+=p; totals.c+=c; totals.f+=f;
+  updateTotals(); closeModal('food-modal'); showToast('已記錄 '+name);
+}
+function addFoodRow(container,name,p,c,f,k){
+  const row=document.createElement('div');
+  row.className='food-row';
+  row.dataset.p=p; row.dataset.c=c; row.dataset.f=f; row.dataset.k=k;
+  row.innerHTML=`<div class="food-info"><div class="food-name">${name}</div><div class="food-detail">蛋白質 ${p}g · 碳水 ${c}g · 脂肪 ${f}g</div></div><div class="food-right"><div class="food-kcal">${k}</div><button class="btn-ef" onclick="openEditFood(this)"><i class="ti ti-pencil"></i></button></div>`;
+  container.appendChild(row);
+}
+function openEditFood(btn){
+  editingFoodEl=btn.closest('.food-row');
+  document.getElementById('ef-name').value=editingFoodEl.querySelector('.food-name').textContent;
+  document.getElementById('ef-p').value=editingFoodEl.dataset.p;
+  document.getElementById('ef-c').value=editingFoodEl.dataset.c;
+  document.getElementById('ef-f').value=editingFoodEl.dataset.f;
+  document.getElementById('ef-k').value=editingFoodEl.dataset.k;
+  document.getElementById('edit-food-modal').classList.add('open');
+}
+function confirmEditFood(){
+  if(!editingFoodEl)return;
+  const ok=parseInt(editingFoodEl.dataset.k)||0, op=parseFloat(editingFoodEl.dataset.p)||0;
+  const oc=parseFloat(editingFoodEl.dataset.c)||0, of=parseFloat(editingFoodEl.dataset.f)||0;
+  const name=document.getElementById('ef-name').value.trim()||editingFoodEl.querySelector('.food-name').textContent;
+  const p=parseFloat(document.getElementById('ef-p').value)||0;
+  const c=parseFloat(document.getElementById('ef-c').value)||0;
+  const f=parseFloat(document.getElementById('ef-f').value)||0;
+  const k=parseInt(document.getElementById('ef-k').value)||Math.round(p*4+c*4+f*9);
+  editingFoodEl.querySelector('.food-name').textContent=name;
+  editingFoodEl.querySelector('.food-detail').textContent=`蛋白質 ${p}g · 碳水 ${c}g · 脂肪 ${f}g`;
+  editingFoodEl.querySelector('.food-kcal').textContent=k;
+  editingFoodEl.dataset.p=p; editingFoodEl.dataset.c=c; editingFoodEl.dataset.f=f; editingFoodEl.dataset.k=k;
+  totals.cal+=k-ok; totals.p+=p-op; totals.c+=c-oc; totals.f+=f-of;
+  updateTotals(); closeModal('edit-food-modal'); showToast('已更新');
+}
+function deleteFood(){
+  if(!editingFoodEl)return;
+  totals.cal=Math.max(0,totals.cal-(parseInt(editingFoodEl.dataset.k)||0));
+  totals.p=Math.max(0,totals.p-(parseFloat(editingFoodEl.dataset.p)||0));
+  totals.c=Math.max(0,totals.c-(parseFloat(editingFoodEl.dataset.c)||0));
+  totals.f=Math.max(0,totals.f-(parseFloat(editingFoodEl.dataset.f)||0));
+  editingFoodEl.remove(); updateTotals(); closeModal('edit-food-modal'); showToast('已刪除');
+}
+
+// ========== PHOTO AI ==========
+function openPhotoModal(){
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('photo-result').style.display='none';
+  document.getElementById('photo-loading').style.display='none';
+  document.getElementById('photo-meal-lbl').style.display='none';
+  document.getElementById('photo-meal-chips').style.display='none';
+  document.getElementById('photo-mbtns').style.display='none';
+  document.getElementById('photo-close-btn').style.display='flex';
+  document.getElementById('photo-modal').classList.add('open');
+}
+function selectMealChip(el,mealId){
+  document.querySelectorAll('#photo-meal-chips .chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); selectedPhotoMeal=mealId;
+}
+async function handlePhotoSelect(event){
+  const file=event.target.files[0]; if(!file)return;
+  const preview=document.getElementById('photo-preview');
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    preview.src=e.target.result; preview.style.display='block';
+    document.getElementById('photo-loading').style.display='flex';
+    document.getElementById('photo-result').style.display='none';
+    const base64=e.target.result.split(',')[1];
+    const mediaType=file.type||'image/jpeg';
+    try{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',max_tokens:400,
+          system:`你是台灣飲食營養辨識助手。分析圖片中的食物，估算營養成分。只輸出 JSON：{"name":"食物描述","cal":整數,"protein":克數,"carb":克數,"fat":克數,"note":"估算說明"}`,
+          messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:'請辨識圖片中的食物並估算熱量與營養成分。'}]}]
+        })
+      });
+      const data=await resp.json();
+      const json=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+      pendingPhotoFood=json;
+      const r=document.getElementById('photo-result');
+      r.innerHTML=`<div class="nr-title">✓ ${json.name}${json.note?' <span style="font-weight:400;color:var(--tx2);font-size:12px;">· '+json.note+'</span>':''}</div><div class="nutr-grid"><div class="ng-item"><div class="ng-val">${json.cal}</div><div class="ng-lbl">卡路里</div></div><div class="ng-item"><div class="ng-val prot-c">${json.protein}g</div><div class="ng-lbl">蛋白質</div></div><div class="ng-item"><div class="ng-val carb-c">${json.carb}g</div><div class="ng-lbl">碳水</div></div><div class="ng-item"><div class="ng-val fat-c">${json.fat}g</div><div class="ng-lbl">脂肪</div></div></div>`;
+      r.style.display='block';
+      document.getElementById('photo-meal-lbl').style.display='block';
+      document.getElementById('photo-meal-chips').style.display='flex';
+      document.getElementById('photo-mbtns').style.display='flex';
+      document.getElementById('photo-close-btn').style.display='none';
+    }catch(e){showToast('辨識失敗，請手動輸入');}
+    document.getElementById('photo-loading').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+function confirmPhotoFood(){
+  if(!pendingPhotoFood)return;
+  const d=pendingPhotoFood;
+  addFoodRow(document.getElementById(selectedPhotoMeal),d.name,d.protein,d.carb,d.fat,d.cal);
+  totals.cal+=d.cal; totals.p+=d.protein; totals.c+=d.carb; totals.f+=d.fat;
+  updateTotals(); closeModal('photo-modal'); showToast('已記錄 '+d.name);
+}
+
+// ========== UTILS ==========
+function toggleChip(el){el.classList.toggle('sel');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+document.querySelectorAll('.modal-bg').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+document.getElementById('food-name-inp').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();fetchNutrition();}
+});
+</script>
+</body>
+</html>
