@@ -247,14 +247,14 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver-badge">v3.7</span><span id="pg-date"></span></p>
+    <p><span class="ver-badge">v4.0</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill"><i class="ti ti-flame"></i><span id="timer">00:00</span></div>
 </div>
 
 <div class="date-bar" id="date-bar">
   <span class="date-bar-label">訓練日期</span>
-  <input type="date" class="date-inp" id="workout-date-inp">
+  <input type="date" class="date-inp" id="workout-date-inp" onchange="onDateChange()">
   <button class="date-today-btn" onclick="setWorkoutDateToday()">今天</button>
 </div>
 
@@ -692,8 +692,98 @@ function switchPage(name) {
 }
 
 // ============ WORKOUT DATE ============
-function setWorkoutDateToday() { document.getElementById('workout-date-inp').value = new Date().toISOString().slice(0,10); }
+function setWorkoutDateToday() {
+  document.getElementById('workout-date-inp').value = new Date().toISOString().slice(0,10);
+  onDateChange();
+}
 function getWorkoutDate() { return document.getElementById('workout-date-inp').value || new Date().toISOString().slice(0,10); }
+
+// Get last recorded weight for an exercise before a given date
+function getLastWeight(exName, beforeDate) {
+  const dates = Object.keys(workoutLog)
+    .filter(d => d < beforeDate && workoutLog[d].details)
+    .sort().reverse();
+  for (const d of dates) {
+    const ex = (workoutLog[d].details || []).find(e => e.name === exName && e.type === 'weight' && e.sets && e.sets.length > 0);
+    if (ex) return ex.sets.map(s => s.w);
+  }
+  return null;
+}
+
+function onDateChange() {
+  const date = getWorkoutDate();
+
+  // Reset timer
+  clearInterval(timerIv);
+  timerSec = 0; timerOn = false;
+  document.getElementById('timer').textContent = '00:00';
+  plankDone = 0; plankSec = 0; plankOn = false;
+  clearInterval(plankIv);
+
+  const existing = workoutLog[date];
+
+  if (existing && existing.details && existing.details.length > 0) {
+    // ===== 已有紀錄：還原當天狀態 =====
+    const c = document.getElementById('ex-container'); c.innerHTML = '';
+    existing.details.forEach(ex => {
+      const card = document.createElement('div'); card.className = 'ex-card';
+      if (ex.type === 'plank') {
+        card.innerHTML = buildPlankCard({...ex, target: ex.target || 30});
+        // Restore plank done count
+        setTimeout(() => {
+          const doneEl = document.getElementById('plank-done');
+          if (doneEl) doneEl.textContent = ex.sets || 0;
+        }, 0);
+      } else if (ex.type === 'cardio') {
+        card.innerHTML = buildCardioCard({...ex, sets: ex.sets || [{t:20,i:8,s:5.5}]});
+        // Restore checks
+        setTimeout(() => {
+          const rows = card.querySelectorAll('tbody tr');
+          (ex.sets || []).forEach((s, i) => {
+            if (s.done && rows[i]) rows[i].querySelector('.set-check')?.classList.add('done');
+          });
+        }, 0);
+      } else if (ex.type === 'stairs') {
+        card.innerHTML = buildStairsCard({...ex, floors: ex.floors || 0});
+      } else {
+        // weight / bodyweight
+        card.innerHTML = buildWeightCard({...ex, sets: ex.sets || [{w:0,r:10}]});
+        setTimeout(() => {
+          const rows = card.querySelectorAll('tbody tr');
+          (ex.sets || []).forEach((s, i) => {
+            if (!rows[i]) return;
+            // Restore weight
+            const wEl = rows[i].querySelector('.wstep-val');
+            if (wEl) wEl.textContent = s.w;
+            // Restore reps
+            const rEl = rows[i].querySelector('.reps-inp');
+            if (rEl) rEl.value = s.r;
+            // Restore check
+            if (s.done) rows[i].querySelector('.set-check')?.classList.add('done');
+          });
+        }, 0);
+      }
+      c.appendChild(card);
+    });
+    showToast('已載入 ' + date + ' 的訓練紀錄');
+
+  } else {
+    // ===== 沒有紀錄：清空打勾，帶入最近重量 =====
+    renderExercises();
+    setTimeout(() => {
+      const exCards = document.querySelectorAll('#ex-container .ex-card');
+      exCards.forEach(card => {
+        const exName = card.querySelector('.ex-name');
+        if (!exName) return;
+        const lastWeights = getLastWeight(exName.textContent, date);
+        if (!lastWeights) return;
+        card.querySelectorAll('.wstep-val').forEach((val, i) => {
+          val.textContent = lastWeights[i] !== undefined ? lastWeights[i] : lastWeights[lastWeights.length - 1];
+        });
+      });
+    }, 0);
+  }
+}
 
 // ============ PHASE ============
 function renderPhase() {
