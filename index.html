@@ -190,7 +190,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver">v5.0</span><span id="pg-date"></span></p>
+    <p><span class="ver">v5.1</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill"><i class="ti ti-flame"></i><span id="timer">00:00</span></div>
 </div>
@@ -245,7 +245,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
     <div class="card">
       <div style="font-size:13px;font-weight:600;margin-bottom:10px;">記錄體重體脂</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
-        <div><label class="flbl">日期</label><input class="finp" style="margin-bottom:0;font-size:13px;padding:8px;" type="date" id="bm-date"></div>
+        <div><label class="flbl">日期</label><input class="finp" style="margin-bottom:0;font-size:13px;padding:8px;" type="date" id="bm-date" placeholder="YYYY-MM-DD"></div>
         <div><label class="flbl">體重 kg</label><input class="finp" style="margin-bottom:0;font-size:13px;padding:8px;" type="number" inputmode="decimal" id="bm-weight" placeholder="53"></div>
         <div><label class="flbl">體脂 %</label><input class="finp" style="margin-bottom:0;font-size:13px;padding:8px;" type="number" inputmode="decimal" id="bm-bf" placeholder="33"></div>
       </div>
@@ -263,11 +263,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <div class="slbl">AI 下次建議</div>
-    <div class="ai-box">
-      <div style="font-size:13px;color:var(--green-d);font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:5px;"><i class="ti ti-sparkles"></i>完成訓練後自動更新</div>
-      <div id="ai-rows"></div>
-    </div>
+
     <div class="slbl">近期紀錄</div>
     <div id="history-list"></div>
     <div class="slbl">訓練計畫</div>
@@ -663,7 +659,6 @@ function renderAll() {
   renderBfSummary();
   renderBodyChart();
   renderCalendar();
-  renderAiSugs();
   renderHistoryList();
   checkPhaseUpgrade();
 }
@@ -850,7 +845,17 @@ function confirmPhase() {
 // =========================================================
 function renderExercises() {
   var c = document.getElementById('ex-container'); c.innerHTML = '';
-  plans[phase].ex.forEach(function(ex) {
+  plans[phase].ex.forEach(function(raw) {
+    // Normalize: support both .n/.m and .name/.muscle from old saved data
+    var ex = {
+      n: raw.n || raw.name || '未命名動作',
+      m: raw.m || raw.muscle || '',
+      t: raw.t || raw.type || 'weight',
+      met: raw.met || 3.5,
+      sets: raw.sets,
+      target: raw.target,
+      floors: raw.floors
+    };
     var card = document.createElement('div'); card.className = 'ex-card';
     if (ex.t === 'plank') card.innerHTML = buildPlankCard(ex);
     else if (ex.t === 'cardio') card.innerHTML = buildCardioCard(ex);
@@ -863,9 +868,15 @@ function renderExercises() {
 
 function getAiChips(exName) {
   var firstW = getFirstWeightForEx(exName);
-  var startTxt = (firstW !== null ? firstW : estimateW(exName)) + 'kg';
+  var startTxt = firstW !== null ? firstW + 'kg' : '—';
   var aiData = aiSugs[exName];
-  var nextTxt = aiData ? aiData.next : '—';
+  var nextTxt;
+  if (aiData) {
+    nextTxt = aiData.next;
+  } else {
+    // No AI data yet - estimate from body data
+    nextTxt = estimateW(exName) + 'kg（估算）';
+  }
   return '<span class="chip-start">🏁 起始 ' + startTxt + '</span><span class="chip-ai"><i class="ti ti-sparkles"></i>建議 ' + nextTxt + '</span>';
 }
 
@@ -1071,10 +1082,9 @@ async function updateAiAfterWorkout() {
   if(!window.GROQ_KEY) return;
   try {
     await updateExAi();
-    await updateHistAi();
     saveAll();
     renderExercises();
-    renderAiSugs();
+    showToast('AI 建議已更新 ✓');
   } catch(e){ console.log('AI update error:',e); }
 }
 
