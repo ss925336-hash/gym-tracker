@@ -190,7 +190,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver">v6.2</span><span id="pg-date"></span></p>
+    <p><span class="ver">v6.3</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill" onclick="toggleTimer()" style="cursor:pointer;" title="點擊暫停/繼續"><i class="ti ti-flame" id="timer-icon"></i><span id="timer">00:00</span></div>
 </div>
@@ -1515,12 +1515,27 @@ function confirmCd(){cdGoals=JSON.parse(JSON.stringify(tempCd));renderCd();saveA
 // =========================================================
 // BODY FAT & MEASUREMENTS
 // =========================================================
+function getLatestWeight() {
+  // Use latest body measurement weight if available, else bfData.w
+  if (bodyLog && bodyLog.length > 0) {
+    var sorted = bodyLog.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+    return sorted[0].w;
+  }
+  return bfData.w || 53;
+}
+function getLatestBf() {
+  if (bodyLog && bodyLog.length > 0) {
+    var sorted = bodyLog.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+    return sorted[0].b;
+  }
+  return bfData.cur || 33;
+}
 function calcBMR() {
-  // Mifflin-St Jeor 女性
-  return Math.round(10 * bfData.w + 6.25 * bfData.h - 5 * bfData.age - 161);
+  // Mifflin-St Jeor 女性，使用最新體重
+  var w = getLatestWeight();
+  return Math.round(10 * w + 6.25 * bfData.h - 5 * bfData.age - 161);
 }
 function calcActivityLevel() {
-  // Count workout days in last 4 weeks
   var now = new Date();
   var fourWeeksAgo = new Date(now - 28 * 24 * 60 * 60 * 1000);
   var workoutDays = Object.keys(workoutLog).filter(function(d) {
@@ -1533,29 +1548,45 @@ function calcActivityLevel() {
   if (perWeek < 6) return { factor: 1.725, label: '每週約 ' + Math.round(perWeek) + ' 天・高度活動' };
   return { factor: 1.9, label: '每天訓練・非常活躍' };
 }
+function calcTargetCal(bmr, tdee) {
+  // TDEE - 400, but not below BMR
+  // If TDEE-400 < BMR, try TDEE-200
+  // If still < BMR, use BMR
+  var t400 = tdee - 400;
+  if (t400 >= bmr) return { cal: t400, note: 'TDEE − 400 kcal 赤字' };
+  var t200 = tdee - 200;
+  if (t200 >= bmr) return { cal: t200, note: 'TDEE − 200 kcal（保護 BMR 下限）' };
+  return { cal: bmr, note: '已達 BMR 下限，建議不再減少攝取' };
+}
 function renderBmrCard() {
   var bmr = calcBMR();
   var activity = calcActivityLevel();
   var tdee = Math.round(bmr * activity.factor);
-  var target = tdee - 400;
+  var target = calcTargetCal(bmr, tdee);
+  var w = getLatestWeight();
   var bmrEl = document.getElementById('bmr-val');
   var tdeeEl = document.getElementById('tdee-val');
   var targetEl = document.getElementById('target-cal-val');
+  var targetNoteEl = document.getElementById('target-cal-note');
   var actEl = document.getElementById('bmr-activity-lbl');
   if (bmrEl) bmrEl.textContent = bmr;
   if (tdeeEl) tdeeEl.textContent = tdee;
-  if (targetEl) targetEl.textContent = target + ' kcal';
-  if (actEl) actEl.textContent = activity.label;
+  if (targetEl) targetEl.textContent = target.cal + ' kcal';
+  if (targetNoteEl) targetNoteEl.textContent = target.note;
+  if (actEl) actEl.textContent = activity.label + (bodyLog && bodyLog.length > 0 ? '・依最新體重 ' + w + 'kg' : '');
 }
 
 function renderBfSummary(){
-  var el=document.getElementById('bf-cur'); if(el) el.textContent=bfData.cur+'%';
+  // Use latest measurement if available
+  var curW = getLatestWeight();
+  var curBf = getLatestBf();
+  var el=document.getElementById('bf-cur'); if(el) el.textContent=curBf+'%';
   var el2=document.getElementById('bf-g1'); if(el2) el2.textContent=bfData.g1+'%';
   var el3=document.getElementById('bf-g2'); if(el3) el3.textContent=bfData.g2+'%';
-  var hw=document.getElementById('bf-hw'); if(hw) hw.textContent=bfData.h+'cm·'+bfData.w+'kg';
-  var lean=bfData.w*(1-bfData.cur/100);
+  var hw=document.getElementById('bf-hw'); if(hw) hw.textContent=bfData.h+'cm·'+curW+'kg';
+  var lean=curW*(1-curBf/100);
   var tgt=lean/(1-bfData.g2/100);
-  var fat=Math.round((bfData.w-tgt)*10)/10;
+  var fat=Math.round((curW-tgt)*10)/10;
   var hint=document.getElementById('bf-hint'); if(hint) hint.textContent='目標 '+bfData.g2+'%　還需減少約 '+fat+'kg 純脂肪';
 }
 function openBfModal(){
