@@ -190,7 +190,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver">v6.3</span><span id="pg-date"></span></p>
+    <p><span class="ver">v6.4</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill" onclick="toggleTimer()" style="cursor:pointer;" title="點擊暫停/繼續"><i class="ti ti-flame" id="timer-icon"></i><span id="timer">00:00</span></div>
 </div>
@@ -810,9 +810,10 @@ function onDateChange() {
         }.bind(null, card, ex.sets), 0);
       }
       if (ex.t === 'stairs') {
-        setTimeout(function(card, floors) {
+        setTimeout(function(card, floors, minutes) {
           var sv = card.querySelector('.stairs-val'); if (sv) sv.textContent = floors;
-        }.bind(null, card, ex.floors||0), 0);
+          var sm = card.querySelector('.stairs-min'); if (sm) sm.value = minutes || 0;
+        }.bind(null, card, ex.floors||0, ex.minutes||0), 0);
       }
       if (ex.t === 'plank') {
         setTimeout(function(card, sets) {
@@ -821,7 +822,8 @@ function onDateChange() {
       }
     });
     showToast('已載入 ' + date + ' 的訓練紀錄');
-    updateBurn();
+    // Wait for all setTimeout restores to complete before calculating burn
+    setTimeout(function(){ updateBurn(); }, 100);
   } else {
     // New date - render fresh with last weights
     renderExercises();
@@ -834,7 +836,8 @@ function onDateChange() {
         var wvals = card.querySelectorAll('.wval');
         wvals.forEach(function(v, i) { v.textContent = lw[i] !== undefined ? lw[i] : lw[lw.length-1]; });
       });
-    }, 0);
+      updateBurn();
+    }, 50);
   }
 }
 
