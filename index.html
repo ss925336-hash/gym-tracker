@@ -190,7 +190,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver">v6.1</span><span id="pg-date"></span></p>
+    <p><span class="ver">v6.2</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill" onclick="toggleTimer()" style="cursor:pointer;" title="點擊暫停/繼續"><i class="ti ti-flame" id="timer-icon"></i><span id="timer">00:00</span></div>
 </div>
@@ -1002,7 +1002,7 @@ function rmSet(btn) {
   tb.querySelectorAll('tr').forEach(function(r,i){r.querySelector('.snum').textContent=i+1;});
 }
 function rmEx(btn) { btn.closest('.ex-card').remove(); showToast('動作已移除'); updateBurn(); }
-function toggleChk(el) { el.classList.toggle('on'); startTimer(); }
+function toggleChk(el) { el.classList.toggle('on'); startTimer(); updateBurn(); }
 
 // =========================================================
 // BURN
