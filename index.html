@@ -190,7 +190,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver">v5.6</span><span id="pg-date"></span></p>
+    <p><span class="ver">v5.7</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill"><i class="ti ti-flame"></i><span id="timer">00:00</span></div>
 </div>
@@ -307,15 +307,26 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
       <div class="tybtn" id="ty-cardio" onclick="setExType('cardio')"><i class="ti ti-run"></i><span>有氧計時</span></div>
       <div class="tybtn" id="ty-stairs" onclick="setExType('stairs')"><i class="ti ti-stairs-up"></i><span>爬樓梯</span></div>
     </div>
-    <label class="flbl">依肌肉群篩選</label>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="mfilter"></div>
-    <label class="flbl">搜尋動作</label>
-    <input class="finp" style="margin-bottom:8px;" type="text" id="ex-search" placeholder="搜尋動作名稱..." oninput="filterEx()">
+    <div id="mfilter-section"><label class="flbl">依肌肉群篩選</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="mfilter"></div></div>
+    <div id="ex-search-section"><label class="flbl">搜尋動作</label>
+    <input class="finp" style="margin-bottom:8px;" type="text" id="ex-search" placeholder="搜尋動作名稱..." oninput="filterEx()"></div>
     <div class="preset-list" id="preset-list"></div>
     <div style="border-top:0.5px solid var(--border);padding-top:12px;margin-top:4px;">
       <label class="flbl">自訂動作名稱</label>
       <input class="finp" type="text" id="ex-custom" placeholder="輸入自訂動作名稱...">
-      <div class="mbtns"><button class="mbtn-c" onclick="closeModal('ex-modal')">取消</button><button class="mbtn-ok" onclick="addCustomEx()">新增自訂</button></div>
+      <label class="flbl">肌肉群（可選）</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;" id="custom-muscle-chips">
+        <button class="chip" onclick="toggleCustomMuscle(this)">胸</button>
+        <button class="chip" onclick="toggleCustomMuscle(this)">背</button>
+        <button class="chip" onclick="toggleCustomMuscle(this)">腿</button>
+        <button class="chip" onclick="toggleCustomMuscle(this)">肩</button>
+        <button class="chip" onclick="toggleCustomMuscle(this)">手臂</button>
+        <button class="chip" onclick="toggleCustomMuscle(this)">核心</button>
+        <button class="chip" onclick="toggleCustomMuscle(this)">臀部</button>
+        <button class="chip" onclick="toggleCustomMuscle(this)">有氧</button>
+      </div>
+      <div class="mbtns"><button class="mbtn-c" onclick="closeModal('ex-modal')">取消</button><button class="mbtn-ok" onclick="addCustomEx()">新增並儲存</button></div>
     </div>
   </div>
 </div>
@@ -535,6 +546,7 @@ var bodyLog = [];
 var aiSugs = {};
 var aiHistSugs = [];
 var genPlanData = null;
+var customExDB = []; // user's custom exercises
 
 // =========================================================
 // STORAGE
@@ -595,6 +607,13 @@ function loadAll() {
     }
   } catch(e) { console.log('loadAll error:', e); }
 }
+function loadCustomDB() {
+  try { var d = localStorage.getItem('gymCustomEx'); if (d) customExDB = JSON.parse(d); } catch(e) {}
+}
+function saveCustomDB() {
+  try { localStorage.setItem('gymCustomEx', JSON.stringify(customExDB)); } catch(e) {}
+}
+
 function loadGroqKey() {
   try {
     var k = localStorage.getItem('gymGroqKey');
@@ -652,6 +671,7 @@ loadAll();
   document.getElementById('bm-date').value = now.toISOString().slice(0,10);
   calY = now.getFullYear(); calM = now.getMonth();
   loadGroqKey();
+  loadCustomDB();
   renderAll();
 })();
 
@@ -903,7 +923,8 @@ function buildCardioCard(ex) {
 }
 function buildStairsCard(ex) {
   var f = ex.floors || 0;
-  return '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px;"><div><div class="ex-name">'+ex.n+'</div><div class="ex-muscle">'+ex.m+'</div><div class="ex-meta"><span class="chip-start">每層約+4kcal</span></div></div><button class="btn-ico" onclick="rmEx(this)"><i class="ti ti-trash"></i></button></div><div class="stairs-row"><div style="flex:1;font-size:12px;color:var(--tx2);">今日爬樓梯層數</div><button class="sbtn" onclick="stStep(this,-1)">−</button><div class="stairs-val">'+f+'</div><button class="sbtn" onclick="stStep(this,1)">+</button><button class="sbtn" onclick="stStep(this,5)" style="font-size:12px;font-weight:600;width:42px;">+5</button></div><div style="font-size:11px;color:var(--tx3);margin-top:6px;">1層≈10-15台階，上下來回算1層</div>';
+  var mins = ex.minutes || 0;
+  return '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px;"><div><div class="ex-name">'+ex.n+'</div><div class="ex-muscle">'+ex.m+'</div><div class="ex-meta"><span class="chip-start">MET 8 · 高強度有氧</span></div></div><button class="btn-ico" onclick="rmEx(this)"><i class="ti ti-trash"></i></button></div><div class="stairs-row"><div style="flex:1;font-size:12px;color:var(--tx2);">今日爬樓梯層數</div><button class="sbtn" onclick="stStep(this,-1)">−</button><div class="stairs-val">'+f+'</div><button class="sbtn" onclick="stStep(this,1)">+</button><button class="sbtn" onclick="stStep(this,5)" style="font-size:12px;font-weight:600;width:42px;">+5</button></div><div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;background:var(--surf2);border-radius:var(--r-s);"><span style="font-size:12px;color:var(--tx2);flex:1;">爬樓梯時間（分鐘）</span><input class="reps stairs-min" type="number" inputmode="numeric" value="'+mins+'" style="width:60px;" placeholder="10" onchange="updateBurn()"></div><div style="font-size:11px;color:var(--tx3);margin-top:6px;">1層≈10-15台階，上下來回算1層</div>';
 }
 function buildPlankCard(ex) {
   var t = ex.target||30, mm=String(Math.floor(t/60)).padStart(2,'0'), ss=String(t%60).padStart(2,'0');
@@ -965,15 +986,48 @@ function toggleChk(el) { el.classList.toggle('on'); startTimer(); }
 // BURN
 // =========================================================
 function updateBurn() {
-  var kcal=0;
+  var w = bfData.w || 53;
+  var kcal = 0;
   document.querySelectorAll('#ex-container .ex-card').forEach(function(card) {
-    card.querySelectorAll('.wval').forEach(function(v){kcal+=(parseFloat(v.textContent)||0)*0.05;});
-    var sv=card.querySelector('.stairs-val'); if(sv) kcal+=(parseInt(sv.textContent)||0)*4;
-    card.querySelectorAll('.reps').forEach(function(r){if(r.id!=='plank-target')kcal+=(parseFloat(r.value)||0)*0.3;});
+    // Stairs: use minutes input
+    var stairsMin = card.querySelector('.stairs-min');
+    if (stairsMin) {
+      var mins = parseFloat(stairsMin.value) || 0;
+      kcal += 8 * w * (mins / 60);
+      return;
+    }
+    // Plank: sets × target seconds
+    var plankDoneEl = card.querySelector('#plank-done');
+    if (plankDoneEl) {
+      var sets = parseInt(plankDoneEl.textContent) || 0;
+      var target = parseInt((card.querySelector('#plank-target') || {}).value) || 30;
+      kcal += 4 * w * (sets * target / 3600);
+      return;
+    }
+    // Cardio: use minutes from input rows
+    var tbody = card.querySelector('tbody');
+    if (tbody) {
+      var rows = tbody.querySelectorAll('tr');
+      if (rows.length > 0) {
+        var firstRowInps = rows[0].querySelectorAll('input');
+        if (firstRowInps.length >= 3) {
+          // cardio: first input is minutes
+          rows.forEach(function(r) {
+            var inps = r.querySelectorAll('input');
+            var mins = parseFloat(inps[0] ? inps[0].value : 0) || 0;
+            kcal += 5.5 * w * (mins / 60);
+          });
+          return;
+        }
+        // Weight training: each set ≈ 3 min (including rest)
+        var setCount = rows.length;
+        kcal += 4 * w * (setCount * 3 / 60);
+      }
+    }
   });
-  kcal=Math.round(kcal);
-  var bc=document.getElementById('burn-card');
-  if(kcal>0){bc.style.display='block';document.getElementById('burn-val').textContent=kcal;}
+  kcal = Math.round(kcal);
+  var bc = document.getElementById('burn-card');
+  if (kcal > 0) { bc.style.display = 'block'; document.getElementById('burn-val').textContent = kcal; }
 }
 
 // =========================================================
@@ -1196,13 +1250,22 @@ function openExModal(){
   document.getElementById('ex-custom').value='';
   document.getElementById('ex-search').value='';
   selExType='weight'; selMF='全部';
+  // Default: show muscle filter, hide for cardio/stairs
+  var mfs = document.getElementById('mfilter-section');
+  if (mfs) mfs.style.display = 'block';
   renderMF(); filterEx();
   openModal('ex-modal');
 }
 function setExType(t){
   selExType=t;
   ['weight','cardio','stairs'].forEach(function(id){document.getElementById('ty-'+id).className='tybtn'+(t===id?' sel':'');});
-  selMF='全部'; renderMF(); filterEx();
+  selMF='全部';
+  // Show muscle filter only for weight training
+  var mfilterSection = document.getElementById('mfilter-section');
+  if (mfilterSection) mfilterSection.style.display = t === 'weight' ? 'block' : 'none';
+  var searchSection = document.getElementById('ex-search-section');
+  if (searchSection) searchSection.querySelector('input').value = '';
+  renderMF(); filterEx();
 }
 function renderMF(){
   var c=document.getElementById('mfilter'); c.innerHTML='';
@@ -1217,25 +1280,38 @@ function renderMF(){
 function filterEx(){
   var q=(document.getElementById('ex-search').value||'').toLowerCase();
   var list=document.getElementById('preset-list'); list.innerHTML='';
-  var filtered=EX_DB.filter(function(ex){
-    if(selExType!=='weight'&&selExType!=='stairs'&&selExType!=='cardio'){
-      // show all types
-    } else if(ex.t!==selExType&&!(selExType==='weight'&&ex.t==='plank')){
-      if(selExType==='weight'&&ex.t==='plank');
-      else if(selExType!==ex.t) return false;
+  // Combine EX_DB with custom exercises
+  var allDB = EX_DB.concat(customExDB);
+  var filtered=allDB.filter(function(ex){
+    if(selExType==='cardio'){ return ex.t==='cardio'; }
+    if(selExType==='stairs'){ return ex.t==='stairs'; }
+    // weight: show weight, plank, bodyweight
+    if(selExType==='weight'){
+      if(ex.t!=='weight'&&ex.t!=='plank'&&ex.t!=='bodyweight') return false;
     }
     var mg=selMF==='全部'||ex.g===selMF;
-    var mq=!q||ex.n.toLowerCase().includes(q)||ex.m.toLowerCase().includes(q);
+    var mq=!q||ex.n.toLowerCase().includes(q)||(ex.m||'').toLowerCase().includes(q);
     return mg&&mq;
   });
   if(filtered.length===0){list.innerHTML='<div style="padding:12px;text-align:center;color:var(--tx3);font-size:13px;">找不到動作，請使用下方自訂</div>';return;}
   filtered.forEach(function(ex){
-    var idx=EX_DB.indexOf(ex);
+    var isCustom = !!ex.custom;
+    var idx = isCustom ? -1 : EX_DB.indexOf(ex);
     var item=document.createElement('div'); item.className='preset-item';
-    item.innerHTML='<div><div style="font-weight:500;color:var(--tx);">'+ex.n+'</div><div style="font-size:11px;color:var(--tx3);">'+ex.m+'</div></div><i class="ti ti-plus" style="color:var(--green);font-size:16px;"></i>';
-    item.onclick=function(){pickEx(idx);};
+    item.innerHTML='<div><div style="font-weight:500;color:var(--tx);">'+ex.n+(isCustom?'<span style="font-size:10px;color:var(--amber);margin-left:5px;">自訂</span>':'')+'</div><div style="font-size:11px;color:var(--tx3);">'+(ex.m||'')+'</div></div><i class="ti ti-plus" style="color:var(--green);font-size:16px;"></i>';
+    if(isCustom){
+      item.onclick=(function(e){return function(){pickCustomEx(e);};})(ex);
+    } else {
+      item.onclick=(function(i){return function(){pickEx(i);};})(idx);
+    }
     list.appendChild(item);
   });
+}
+function pickCustomEx(ex){
+  var card=document.createElement('div'); card.className='ex-card';
+  card.innerHTML=buildWeightCard({n:ex.n,m:ex.m||'自訂',t:'weight',sets:[{w:0,r:12},{w:0,r:10}]});
+  document.getElementById('ex-container').appendChild(card);
+  closeModal('ex-modal'); showToast('已新增 '+ex.n); startTimer();
 }
 function pickEx(idx){
   var preset=EX_DB[idx];
@@ -1253,13 +1329,27 @@ function pickEx(idx){
   document.getElementById('ex-container').appendChild(card);
   closeModal('ex-modal'); showToast('已新增 '+preset.n); startTimer();
 }
+function toggleCustomMuscle(el) {
+  // Only allow one selection
+  document.querySelectorAll('#custom-muscle-chips .chip').forEach(function(c){ c.classList.remove('sel'); });
+  el.classList.add('sel');
+}
 function addCustomEx(){
   var name=document.getElementById('ex-custom').value.trim();
   if(!name){showToast('請輸入動作名稱');return;}
+  var selChip = document.querySelector('#custom-muscle-chips .chip.sel');
+  var muscle = selChip ? selChip.textContent : '自訂';
+  var group = selChip ? selChip.textContent : '自訂';
+  // Save to custom DB if not already there
+  var exists = customExDB.find(function(e){ return e.n === name; });
+  if (!exists) {
+    customExDB.push({n:name, m:muscle, g:group, t:'weight', met:3.5, s:'自訂動作', custom:true});
+    saveCustomDB();
+  }
   var card=document.createElement('div'); card.className='ex-card';
-  card.innerHTML=buildWeightCard({n:name,m:selMF!=='全部'?selMF:'自訂',t:'weight',sets:[{w:0,r:12},{w:0,r:10}]});
+  card.innerHTML=buildWeightCard({n:name,m:muscle,t:'weight',sets:[{w:0,r:12},{w:0,r:10}]});
   document.getElementById('ex-container').appendChild(card);
-  closeModal('ex-modal'); showToast('已新增 '+name); startTimer();
+  closeModal('ex-modal'); showToast('已新增並儲存 '+name); startTimer();
 }
 
 // =========================================================
