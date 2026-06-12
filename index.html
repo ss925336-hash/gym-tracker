@@ -190,7 +190,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver">v5.7</span><span id="pg-date"></span></p>
+    <p><span class="ver">v6.0</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill"><i class="ti ti-flame"></i><span id="timer">00:00</span></div>
 </div>
@@ -241,6 +241,27 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
         <div style="margin-left:auto;font-size:12px;color:var(--tx2);" id="bf-hw">161cm·53kg</div>
       </div>
       <div style="font-size:11px;color:var(--tx3);margin-top:6px;" id="bf-hint">還需減少約 4.2kg 純脂肪</div>
+    </div>
+    <div class="card" id="bmr-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:600;">基礎代謝 / TDEE</div>
+        <div style="font-size:11px;color:var(--tx3);" id="bmr-activity-lbl">計算中...</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:var(--surf2);border-radius:var(--r-s);padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);" id="bmr-val">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px;">BMR 基礎代謝</div>
+        </div>
+        <div style="background:var(--surf2);border-radius:var(--r-s);padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace;color:var(--green);" id="tdee-val">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px;">TDEE 每日消耗</div>
+        </div>
+      </div>
+      <div style="background:var(--green-l);border-radius:var(--r-s);padding:10px 13px;">
+        <div style="font-size:11px;color:var(--green-d);font-weight:600;margin-bottom:3px;">建議每日攝取（增肌減脂）</div>
+        <div style="font-size:18px;font-weight:600;font-family:'DM Mono',monospace;color:var(--green-d);" id="target-cal-val">—</div>
+        <div style="font-size:11px;color:var(--tx2);margin-top:2px;" id="target-cal-note">TDEE - 400 kcal 赤字</div>
+      </div>
     </div>
     <div class="card">
       <div style="font-size:13px;font-weight:600;margin-bottom:10px;">記錄體重體脂</div>
@@ -680,6 +701,7 @@ function renderAll() {
   renderExercises();
   renderCd();
   renderBfSummary();
+  renderBmrCard();
   renderBodyChart();
   renderCalendar();
   renderHistoryList();
@@ -989,45 +1011,46 @@ function updateBurn() {
   var w = bfData.w || 53;
   var kcal = 0;
   document.querySelectorAll('#ex-container .ex-card').forEach(function(card) {
-    // Stairs: use minutes input
+    // Stairs: use minutes input (no check needed)
     var stairsMin = card.querySelector('.stairs-min');
     if (stairsMin) {
       var mins = parseFloat(stairsMin.value) || 0;
-      kcal += 8 * w * (mins / 60);
+      if (mins > 0) kcal += 8 * w * (mins / 60);
       return;
     }
-    // Plank: sets × target seconds
+    // Plank: only completed sets count
     var plankDoneEl = card.querySelector('#plank-done');
     if (plankDoneEl) {
       var sets = parseInt(plankDoneEl.textContent) || 0;
       var target = parseInt((card.querySelector('#plank-target') || {}).value) || 30;
-      kcal += 4 * w * (sets * target / 3600);
+      if (sets > 0) kcal += 4 * w * (sets * target / 3600);
       return;
     }
-    // Cardio: use minutes from input rows
     var tbody = card.querySelector('tbody');
     if (tbody) {
       var rows = tbody.querySelectorAll('tr');
       if (rows.length > 0) {
         var firstRowInps = rows[0].querySelectorAll('input');
         if (firstRowInps.length >= 3) {
-          // cardio: first input is minutes
+          // Cardio: only checked rows count
           rows.forEach(function(r) {
+            if (!r.querySelector('.chk.on')) return;
             var inps = r.querySelectorAll('input');
             var mins = parseFloat(inps[0] ? inps[0].value : 0) || 0;
             kcal += 5.5 * w * (mins / 60);
           });
           return;
         }
-        // Weight training: each set ≈ 3 min (including rest)
-        var setCount = rows.length;
-        kcal += 4 * w * (setCount * 3 / 60);
+        // Weight: only checked sets count
+        var doneSets = Array.from(rows).filter(function(r){ return r.querySelector('.chk.on'); }).length;
+        if (doneSets > 0) kcal += 4 * w * (doneSets * 3 / 60);
       }
     }
   });
   kcal = Math.round(kcal);
   var bc = document.getElementById('burn-card');
   if (kcal > 0) { bc.style.display = 'block'; document.getElementById('burn-val').textContent = kcal; }
+  else { bc.style.display = 'none'; }
 }
 
 // =========================================================
@@ -1121,6 +1144,7 @@ function finishWorkout() {
   timerSec=0; timerOn=false;
   document.getElementById('timer').textContent='00:00';
   showToast('訓練完成！已記錄到 '+date+' 🎉');
+  renderBmrCard();
   // Trigger AI update
   setTimeout(function(){updateAiAfterWorkout();},500);
   setTimeout(function(){switchPage('history');},700);
@@ -1249,23 +1273,23 @@ function closeModal(id) { document.getElementById(id).className='modal-bg'; }
 function openExModal(){
   document.getElementById('ex-custom').value='';
   document.getElementById('ex-search').value='';
+  // Reset custom muscle chips
+  document.querySelectorAll('#custom-muscle-chips .chip').forEach(function(c){c.classList.remove('sel');});
   selExType='weight'; selMF='全部';
-  // Default: show muscle filter, hide for cardio/stairs
-  var mfs = document.getElementById('mfilter-section');
-  if (mfs) mfs.style.display = 'block';
+  ['weight','cardio','stairs'].forEach(function(id){document.getElementById('ty-'+id).className='tybtn'+(id==='weight'?' sel':'');});
+  var mfs=document.getElementById('mfilter-section');
+  if(mfs) mfs.style.display='block';
   renderMF(); filterEx();
   openModal('ex-modal');
 }
 function setExType(t){
-  selExType=t;
+  selExType=t; selMF='全部';
   ['weight','cardio','stairs'].forEach(function(id){document.getElementById('ty-'+id).className='tybtn'+(t===id?' sel':'');});
-  selMF='全部';
-  // Show muscle filter only for weight training
-  var mfilterSection = document.getElementById('mfilter-section');
-  if (mfilterSection) mfilterSection.style.display = t === 'weight' ? 'block' : 'none';
-  var searchSection = document.getElementById('ex-search-section');
-  if (searchSection) searchSection.querySelector('input').value = '';
-  renderMF(); filterEx();
+  var mfs=document.getElementById('mfilter-section');
+  if(mfs) mfs.style.display=(t==='weight')?'block':'none';
+  var si=document.getElementById('ex-search'); if(si) si.value='';
+  if(t==='weight') renderMF();
+  filterEx();
 }
 function renderMF(){
   var c=document.getElementById('mfilter'); c.innerHTML='';
@@ -1462,6 +1486,39 @@ function confirmCd(){cdGoals=JSON.parse(JSON.stringify(tempCd));renderCd();saveA
 // =========================================================
 // BODY FAT & MEASUREMENTS
 // =========================================================
+function calcBMR() {
+  // Mifflin-St Jeor 女性
+  return Math.round(10 * bfData.w + 6.25 * bfData.h - 5 * bfData.age - 161);
+}
+function calcActivityLevel() {
+  // Count workout days in last 4 weeks
+  var now = new Date();
+  var fourWeeksAgo = new Date(now - 28 * 24 * 60 * 60 * 1000);
+  var workoutDays = Object.keys(workoutLog).filter(function(d) {
+    return new Date(d) >= fourWeeksAgo;
+  }).length;
+  var perWeek = workoutDays / 4;
+  if (perWeek < 1) return { factor: 1.2, label: '幾乎不運動' };
+  if (perWeek < 2) return { factor: 1.375, label: '每週約 1 天・輕度活動' };
+  if (perWeek < 4) return { factor: 1.55, label: '每週約 ' + Math.round(perWeek) + ' 天・中等活動' };
+  if (perWeek < 6) return { factor: 1.725, label: '每週約 ' + Math.round(perWeek) + ' 天・高度活動' };
+  return { factor: 1.9, label: '每天訓練・非常活躍' };
+}
+function renderBmrCard() {
+  var bmr = calcBMR();
+  var activity = calcActivityLevel();
+  var tdee = Math.round(bmr * activity.factor);
+  var target = tdee - 400;
+  var bmrEl = document.getElementById('bmr-val');
+  var tdeeEl = document.getElementById('tdee-val');
+  var targetEl = document.getElementById('target-cal-val');
+  var actEl = document.getElementById('bmr-activity-lbl');
+  if (bmrEl) bmrEl.textContent = bmr;
+  if (tdeeEl) tdeeEl.textContent = tdee;
+  if (targetEl) targetEl.textContent = target + ' kcal';
+  if (actEl) actEl.textContent = activity.label;
+}
+
 function renderBfSummary(){
   var el=document.getElementById('bf-cur'); if(el) el.textContent=bfData.cur+'%';
   var el2=document.getElementById('bf-g1'); if(el2) el2.textContent=bfData.g1+'%';
@@ -1488,7 +1545,7 @@ function confirmBf(){
   bfData.age=parseInt(document.getElementById('bf-a').value)||33;
   bfData.g1=parseFloat(document.getElementById('bf-g1i').value)||28;
   bfData.g2=parseFloat(document.getElementById('bf-g2i').value)||25;
-  renderBfSummary(); saveAll(); closeModal('bf-modal'); showToast('身體數據已更新');
+  renderBfSummary(); renderBmrCard(); saveAll(); closeModal('bf-modal'); showToast('身體數據已更新');
 }
 function addBodyMeasurement(){
   var date=document.getElementById('bm-date').value;
