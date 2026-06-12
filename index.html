@@ -190,7 +190,7 @@ button,input,textarea,select{font-family:'DM Sans',sans-serif;}
 <div class="hdr">
   <div class="hdr-l">
     <h1 id="pg-title">今日訓練</h1>
-    <p><span class="ver">v6.4</span><span id="pg-date"></span></p>
+    <p><span class="ver">v6.5</span><span id="pg-date"></span></p>
   </div>
   <div class="timer-pill" id="timer-pill" onclick="toggleTimer()" style="cursor:pointer;" title="點擊暫停/繼續"><i class="ti ti-flame" id="timer-icon"></i><span id="timer">00:00</span></div>
 </div>
@@ -720,6 +720,10 @@ function switchPage(name) {
   document.getElementById('timer-pill').style.opacity = name === 'workout' ? '1' : '0';
   document.getElementById('date-bar').style.display = name === 'workout' ? 'flex' : 'none';
   document.getElementById('scroll').scrollTop = 0;
+  // When switching to workout, restore current date's state
+  if (name === 'workout') {
+    onDateChange();
+  }
 }
 
 // =========================================================
@@ -786,44 +790,52 @@ function onDateChange() {
       c.appendChild(card);
       // Restore checks and values
       if (ex.t === 'weight' && ex.sets) {
-        setTimeout(function(card, sets) {
-          var rows = card.querySelectorAll('tbody tr');
-          sets.forEach(function(s, i) {
-            if (!rows[i]) return;
-            var wEl = rows[i].querySelector('.wval'); if (wEl) wEl.textContent = s.w;
-            var rEl = rows[i].querySelector('.reps'); if (rEl) rEl.value = s.r;
-            if (s.done) { var chk = rows[i].querySelector('.chk'); if (chk) chk.classList.add('on'); }
-          });
-        }.bind(null, card, ex.sets), 0);
+        (function(card, sets) {
+          setTimeout(function() {
+            var rows = card.querySelectorAll('tbody tr');
+            sets.forEach(function(s, i) {
+              if (!rows[i]) return;
+              var wEl = rows[i].querySelector('.wval'); if (wEl) wEl.textContent = s.w;
+              var rEl = rows[i].querySelector('.reps'); if (rEl) rEl.value = s.r;
+              if (s.done) { var chk = rows[i].querySelector('.chk'); if (chk) chk.classList.add('on'); }
+            });
+          }, 10);
+        })(card, ex.sets);
       }
       if (ex.t === 'cardio' && ex.sets) {
-        setTimeout(function(card, sets) {
-          var rows = card.querySelectorAll('tbody tr');
-          sets.forEach(function(s, i) {
-            if (!rows[i]) return;
-            var inps = rows[i].querySelectorAll('input');
-            if (inps[0]) inps[0].value = s.tm;
-            if (inps[1]) inps[1].value = s.inc;
-            if (inps[2]) inps[2].value = s.spd;
-            if (s.done) { var chk = rows[i].querySelector('.chk'); if (chk) chk.classList.add('on'); }
-          });
-        }.bind(null, card, ex.sets), 0);
+        (function(card, sets) {
+          setTimeout(function() {
+            var rows = card.querySelectorAll('tbody tr');
+            sets.forEach(function(s, i) {
+              if (!rows[i]) return;
+              var inps = rows[i].querySelectorAll('input');
+              if (inps[0]) inps[0].value = s.tm || s.t || 0;
+              if (inps[1]) inps[1].value = s.inc || s.i || 0;
+              if (inps[2]) inps[2].value = s.spd || s.s || 0;
+              if (s.done) { var chk = rows[i].querySelector('.chk'); if (chk) chk.classList.add('on'); }
+            });
+          }, 10);
+        })(card, ex.sets);
       }
       if (ex.t === 'stairs') {
-        setTimeout(function(card, floors, minutes) {
-          var sv = card.querySelector('.stairs-val'); if (sv) sv.textContent = floors;
-          var sm = card.querySelector('.stairs-min'); if (sm) sm.value = minutes || 0;
-        }.bind(null, card, ex.floors||0, ex.minutes||0), 0);
+        (function(card, floors, minutes) {
+          setTimeout(function() {
+            var sv = card.querySelector('.stairs-val'); if (sv) sv.textContent = floors;
+            var sm = card.querySelector('.stairs-min'); if (sm) sm.value = minutes || 0;
+          }, 10);
+        })(card, ex.floors||0, ex.minutes||0);
       }
       if (ex.t === 'plank') {
-        setTimeout(function(card, sets) {
-          var pd = card.querySelector('#plank-done'); if (pd) pd.textContent = sets||0;
-        }.bind(null, card, ex.sets||0), 0);
+        (function(card, sets) {
+          setTimeout(function() {
+            var pd = card.querySelector('#plank-done'); if (pd) pd.textContent = sets||0;
+          }, 10);
+        })(card, ex.sets||0);
       }
     });
     showToast('已載入 ' + date + ' 的訓練紀錄');
     // Wait for all setTimeout restores to complete before calculating burn
-    setTimeout(function(){ updateBurn(); }, 100);
+    setTimeout(function(){ updateBurn(); }, 150);
   } else {
     // New date - render fresh with last weights
     renderExercises();
